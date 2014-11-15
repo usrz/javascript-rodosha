@@ -110,6 +110,13 @@ function(promize, workers, messages, proxy) {
 
         /* Once the modules have been imported, request a proxy */
         return send({proxy: module}).then(function(success) {
+          /* Static value? Already decoded, just go for it */
+          if (success.value) {
+            console.log("PROXY FOR", module, "IS VALUE", success.value);
+            return success.value;
+          }
+
+          console.log("PROXY FOR", module, "IS DEFINED AS", success.definition);
           return proxy.makeProxy(success.object, success.proxy, send);
         });
       });
@@ -196,6 +203,7 @@ function(promize, workers, messages, proxy) {
     script.push("(" + Esquire.$$script + ")(self);\n");
     script.push(Esquire.module("slave/messages").$$script + ";\n");
     script.push(Esquire.module("slave/client").$$script + ";\n");
+    script.push(Esquire.module("slave/proxy").$$script + ";\n");
     script.push("new Esquire().require('slave/client').init();\n");
 
     /* Dump our code for debugging */

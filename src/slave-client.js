@@ -6,7 +6,7 @@
  *
  * @module slave/client
  */
-Esquire.define('slave/client', ['$window', '$esquire'], function($window, $esquire) {
+Esquire.define('slave/client', ['$window', '$esquire', 'slave/messages', 'slave/proxy'], function($window, $esquire, messages, proxy) {
 
   /**
    * Initialize the {@link Worker} side.
@@ -19,13 +19,23 @@ Esquire.define('slave/client', ['$window', '$esquire'], function($window, $esqui
     var proxies = {};
     var lastProxyId = 0;
     function makeProxy(object) {
-      var proxyId = "proxy_" + (++ lastProxyId);
-      proxies[proxyId] = object;
-      return { proxy: proxyId, object: object };
+      if (((typeof(object) === 'object') && (!Array.isArray(object))) ||
+          (typeof(object) === 'function')) {
+
+        /* Only non-array objects and functions get proxied */
+        var proxyId = "proxy_" + (++ lastProxyId);
+        proxies[proxyId] = object;
+        var definition = proxy.defineProxy(object);
+        return { proxy: proxyId, object: object, definition: definition };
+
+      } else {
+
+        /* Arrays and normal objects go through as values */
+        return { value: object };
+      }
     }
 
     /* Encoding and decoding of messages */
-    var messages = $esquire.require('slave/messages');
     var encode = messages.encode;
     var decode = messages.decode;
 

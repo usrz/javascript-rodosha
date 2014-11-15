@@ -3,14 +3,24 @@
 esquire(['$esquire', 'slave', 'promize'], function($esquire, slave, promize) {
 
   Esquire.define("module_a", function() { return "a-value"});
-  Esquire.define("module_b", function() { return function() { return "b-value" }});
+
+  Esquire.define("module_b", ['$window'], function($window) {
+    return function() {
+      if ($window.document) {
+        throw new Error("module_b not running in worker");
+      } else {
+        return "b-value"
+      }
+    }
+  });
+
   Esquire.define("module_c", ["module_a", "module_b", "$window"], function(a, b, $window) {
     return {
       prp_a: a,
       fnc_b: b,
       fnc_c: function(x) {
         if ($window.document) {
-          throw new Error("Sorry, but this should not work");
+          throw new Error("module_c[fnc_c] not running in worker");
         } else {
           return [x, a, b()].join(' ');
         }
@@ -18,7 +28,7 @@ esquire(['$esquire', 'slave', 'promize'], function($esquire, slave, promize) {
       obj_d: {
         fnc_e: function(x) {
           if ($window.document) {
-            throw new Error("Sorry, but this should not work");
+            throw new Error("module_c[obj_d][fnc_e] not running in worker");
           } else {
             return [b(), a, x].join(' ');
           }
@@ -37,12 +47,11 @@ esquire(['$esquire', 'slave', 'promize'], function($esquire, slave, promize) {
       expect(a).to.be.equal('a-value');
 
       expect(b).to.be.a('function');
-      expect(b()).to.be.equal('b-value');
+      expect(function() { b() }).to.throw(/^module_b not running in worker$/);
 
       expect(c.prp_a).to.be.equal(a);
-      expect(c.fnc_b()).to.be.equal(b());
-      expect(function() { c.fnc_c("hello")   }).to.throw(/^Sorry, but this should not work$/);
-      expect(function() { c.obj_d.fnc_e("world") }).to.throw(/^Sorry, but this should not work$/);
+      expect(function() { c.fnc_c("hello")   }).to.throw('module_c[fnc_c] not running in worker');
+      expect(function() { c.obj_d.fnc_e("world") }).to.throw('module_c[obj_d][fnc_e] not running in worker');
 
     });
 
