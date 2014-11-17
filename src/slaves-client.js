@@ -56,12 +56,12 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
       var proxyId = "proxy_" + (++ lastProxyId);
       proxies[proxyId] = object;
       var definition = defineProxy(object);
-      return { proxy: proxyId, definition: definition };
+      return { proxy: { id: proxyId, definition: definition }};
 
     } else {
 
       /* Arrays and normal objects go through as values */
-      return { value: object };
+      return { resolve: object };
     }
   }
 
@@ -85,8 +85,9 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
         function(failure) { message.reject(failure) }
       );
     } else if (data !== undefined) {
-      var result = this.data.makeProxy ? makeProxy(data) : messages.encode(data);
-      $window.postMessage({ id: this.id, resolve: result });
+      var response = this.data.makeProxy ? makeProxy(data) : { resolve: messages.encode(data) };
+      response.id = this.id;
+      $window.postMessage(response);
     } else {
       $window.postMessage({ id: this.id, resolve: true });
     }
@@ -169,8 +170,7 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
 
         /* Gracefully close this */
         else if (message.data.destroy) {
-          var proxy = proxies[message.data.destroy];
-          if (proxy) {
+          if (message.data.destroy in proxies) {
             delete proxies[message.data.destroy];
             message.accept();
           } else {

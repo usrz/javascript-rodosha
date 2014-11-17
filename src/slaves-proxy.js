@@ -20,7 +20,10 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
     /* Object definitions need to be re-wrapped */
     if (typeof(definition) === 'object') {
 
-      var object = {};
+      var object = Object.defineProperty({}, "$$proxyId$$", {
+        enumerable: false, configurable: false, value: names[0]
+      });
+
       for (var i in definition) {
         (function(i) {
           var child = definition[i];
@@ -66,8 +69,16 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
 
   }
 
+  function buildProxy(proxy, send) {
+    var object = makeProxy(proxy.definition, [ proxy.id ], send);
+    return Object.defineProperty(object, "$$proxyId$$", {
+      enumerable: false, configurable: false, value: proxy.id
+    });
+  }
+
   return Object.freeze({
-    makeProxy: makeProxy
+    makeProxy: makeProxy,
+    buildProxy: buildProxy
   });
 
 });

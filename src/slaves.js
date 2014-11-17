@@ -119,24 +119,8 @@ function(promize, workers, messages, proxy) {
 
     /** Create a proxy object for a module defined in the worker. */
     function proxyModule(module) {
-
-      /* Import all modules required for this proxy to work */
       return this.import(module).then(function() {
-
-        /* Once the modules have been imported, request a proxy */
-        return send({require: module, makeProxy: true}).then(function(success) {
-          if (success.value) {
-            /* Static value? Already decoded, just go for it */
-            return success.value;
-          } else {
-            /* Full definition, make a proxy */
-            var definition = success.definition;
-            var proxyId = success.proxy;
-            return Object.defineProperty(proxy.makeProxy(definition, proxyId, send), "$$proxyId$$", {
-              enumerable: false, configurable: false, get: function() { return proxyId }
-            });
-          }
-        });
+        return send({require: module, makeProxy: true});
       });
     };
 
@@ -221,7 +205,9 @@ function(promize, workers, messages, proxy) {
             var deferred = pendingMessages[msgid];
             if (deferred) {
               delete pendingMessages[msgid];
-              if (data.hasOwnProperty('resolve')) {
+              if (data.hasOwnProperty('proxy')) {
+                deferred.resolve(proxy.buildProxy(data.proxy, send));
+              } else if (data.hasOwnProperty('resolve')) {
                 deferred.resolve(data.resolve);
               } else if (data.hasOwnProperty('reject')) {
                 if (debug) console.warn("Rejected message " + msgid, data);
