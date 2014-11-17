@@ -5,7 +5,7 @@
  *
  * @module slave/proxy
  */
-Esquire.define('slaves/proxy', ['promize'], function(promize) {
+Esquire.define('slaves/proxy', [], function() {
 
   /**
    * Wrap the specified object replacing all functions with remote executors
@@ -44,7 +44,7 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
           } else {
             /* All other properties just request values asynchronously */
             props['get'] = function() { return send({ proxy: { proxy: clone } })};
-            props['set'] = function(value) { send({ proxy: { value: value, proxy: clone } })};
+            props['set'] = function(value) { send({ proxy: { value: value, proxy: clone } }) };
           }
 
           /* Define the properties for this */
@@ -69,8 +69,8 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
 
   }
 
-  function buildProxy(proxy, send) {
-    var object = makeProxy(proxy.definition, [ proxy.id ], send);
+  function buildProxy(proxy, server) {
+    var object = makeProxy(proxy.definition, [ proxy.id ], server.send);
     return Object.defineProperty(object, "$$proxyId$$", {
       enumerable: false, configurable: false, value: proxy.id
     });

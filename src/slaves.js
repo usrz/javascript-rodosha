@@ -1,11 +1,8 @@
 'use strict';
 
-Esquire.define('slaves', [ 'promize',
-                           'slaves/servers',
-                           'slaves/workers' ],
-function(promize, servers, workers) {
+Esquire.define('slaves', [ 'promize', 'slaves/servers', 'slaves/workers' ], function(promize, servers, workers) {
 
-  function createSlave(debug) {
+  return Object.freeze({ create: function(debug) {
 
     var workerId = Math.floor(Math.random() * 0x0100000000).toString(16);
     while (workerId.length < 8) workerId = '0' + workerId;
@@ -18,7 +15,7 @@ function(promize, servers, workers) {
     script.push("(" + Esquire.$$script + ")(self);\n");
     script.push(Esquire.module("slaves/messages").$$script + ";\n");
     script.push(Esquire.module("slaves/client").$$script + ";\n");
-    script.push("new Esquire().require('slaves/client').init();\n");
+    script.push("new Esquire().require('slaves/client').init(" + debug + ");\n");
 
     /* Dump our code for debugging */
     if (debug) {
@@ -35,8 +32,15 @@ function(promize, servers, workers) {
 
     /* ---------------------------------------------------------------------- */
 
-    /* Create worker */
+    /* Create worker and wrap it into a server */
     var server = servers.create(workers.makeWorker(script), workerId, debug);
+    var wrapper = Object.freeze({
+      'import':    function() { return server['import'   ].apply(server, arguments) },
+      'proxy':     function() { return server['proxy'    ].apply(server, arguments) },
+      'destroy':   function() { return server['destroy'  ].apply(server, arguments) },
+      'close':     function() { return server['close'    ].apply(server, arguments) },
+      'terminate': function() { return server['terminate'].apply(server, arguments) },
+    });
 
     /* Error handler */
     server.worker.onerror = function(event) {
@@ -48,24 +52,19 @@ function(promize, servers, workers) {
     server.worker.onmessage = function(event) {
 
       if ('initialized' in event.data) {
-        var worker = event.target;
-        initialized.resolve(server.init(event.data.initialized));
+        server.init(event.data.initialized);
+        initialized.resolve(wrapper);
       } else try {
         server.received(event.data);
       } catch (error) {
-        console.error("Worker[" + workerId + "] Exception processing message", event.data);
+        console.error("Worker[" + workerId + "] Exception processing message", event.data, error);
+        console.error(error.stack);
       }
     }
 
     /* Return our promise */
     return initialized.promise;
 
-  }
-
-  /* ======================================================================== */
-  /* EXPORTS                                                                  */
-  /* ======================================================================== */
-
-  return Object.freeze({ create: createSlave });
+  }});
 
 });

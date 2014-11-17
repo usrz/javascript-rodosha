@@ -8,7 +8,7 @@
  */
 Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'], function(promize, messages, proxy) {
 
-  function create(worker, workerId, debug) {
+  return Object.freeze({ create: function(worker, workerId, debug) {
 
     /* Messages ID and pending */
     var lastMessageId = 0;
@@ -19,43 +19,83 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
 
     /* ---------------------------------------------------------------------- */
 
-    //return Object.freeze({})
-      function init(modules) {
+    var server = Object.freeze({
+
+      worker: worker,
+
+      init: function(modules) {
         for (var i in modules) {
           injectedModules[modules[i]] = true;
         }
         return this;
-      }
+      },
 
-      function send(message) {
-        /* Sanity checks */
-        if (! worker) throw new Error("Worker " + workerId + " unavailable");
+      /* -------------------------------------------------------------------- */
+
+      send: function(message) {
 
         /* Create and remember our deferred */
         var deferred = new promize.Deferred();
+        var asProxy = false;
+        var sent = false;
 
-        try {
-          /* Prepare the message for sending */
-          message.id = lastMessageId ++;
-          message = messages.encode(message);
-          pendingMessages[message.id] = deferred;
+        /* Our message-sending function */
+        function post() {
+          try {
+            if (! worker) throw new Error("Worker " + workerId + " unavailable");
+            if (sent) return;
 
-          /* If debugging, debug! */
-          if (debug) {
-            console.log("Sending to Worker[" + workerId + "]\n" + JSON.stringify(message, null, 2));
+            /* Assign an ID, and proxy flag */
+            message.id = lastMessageId ++;
+            if (asProxy) message.makeProxy = true;
+
+            /* Encode and remember this message */
+            message = messages.encode(message);
+            pendingMessages[message.id] = deferred;
+
+            /* If debugging, debug! */
+            if (debug) {
+              console.log("Sending to Worker[" + workerId + "]\n" + JSON.stringify(message, null, 2));
+            }
+
+            /* Post the message */
+            worker.postMessage(message);
+
+          } catch (error) {
+            deferred.reject(error);
+          } finally {
+            sent = true;
           }
-
-          /* Send it out */
-          worker.postMessage(message);
-        } catch (error) {
-          deferred.reject(error);
         }
 
-        /* Return our promise */
+        post();
         return deferred.promise;
-      }
 
-      function received(data) {
+        /// TODO: all this stuff has to be moved into PROXY/FUNCTION
+
+        /* Our pseudo-promise being returned */
+        return Object.freeze(Object.defineProperties(new Object(), {
+          "now": { enumerable: false, configurable: false, get: function() {
+            return this.then(function(success) { return success });
+          }},
+          "asProxy": { enumerable: true, configurable: false, value: function() {
+            if (sent) throw new Error("Message already sent");
+            asProxy = true;
+            console.log("RETURNING ON ASPROXY", this);
+            return this;
+          }},
+          "catch": { enumerable: true, configurable: false, value: function(callback) {
+            post();
+            return this.then(null, callback);
+          }},
+          "then": { enumerable: true, configurable: false, value: function(onSuccess, onFailure) {
+            post();
+            return deferred.promise.then(onSuccess, onFailure);
+          }},
+        }));
+      },
+
+      received: function(data) {
 
         data = messages.decode(data);
 
@@ -75,7 +115,7 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
           if (deferred) {
             delete pendingMessages[msgid];
             if (data.hasOwnProperty('proxy')) {
-              deferred.resolve(proxy.buildProxy(data.proxy, send));
+              deferred.resolve(proxy.buildProxy(data.proxy, this));
             } else if (data.hasOwnProperty('resolve')) {
               deferred.resolve(data.resolve);
             } else if (data.hasOwnProperty('reject')) {
@@ -89,17 +129,18 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
             console.error("Unknown message ID", msgid);
           }
         }
-      }
+      },
 
-      /** Create a proxy object for a module defined in the worker. */
-      function closeWorker() {
+      /* -------------------------------------------------------------------- */
+
+      close: function() {
         if (! worker) return promize.Promise.resolve();
-        return send({close: true}).then(function(succcess) {
-          terminateWorker(new Error("Worker " + workerId + " closed"));
+        return this.send({close: true}).then(function(succcess) {
+          server.terminate(new Error("Worker " + workerId + " closed"));
         });
-      };
+      },
 
-      function terminateWorker(cause) {
+      terminate: function(cause) {
         if (worker) {
           worker.terminate();
           worker = null;
@@ -110,12 +151,11 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
             message.reject(cause);
           }
         }
-      }
+      },
 
       /* ---------------------------------------------------------------------- */
 
-      /* Import one (or more) modules in the worker */
-      function importModule() {
+      import: function() {
 
         /* Find all modules to import */
         var modules = {};
@@ -147,46 +187,35 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
         for (var i in injectables) {
 
           /* Message id, deferred, and (derived) promise */
-          promises.push(send({module: injectables[i]}).then(function(moduleName) {
-            injectedModules[moduleName] = true;
-            return moduleName;
-          }));
-
+          promises.push(this.send({module: injectables[i]})
+            .then(function(moduleName) {
+              injectedModules[moduleName] = true;
+              return moduleName;
+            })
+          );
         }
 
         return promize.Promise.all(promises);
-      };
+      },
 
-      /* ---------------------------------------------------------------------- */
-
-      /** Create a proxy object for a module defined in the worker. */
-      function proxyModule(module) {
+      proxy: function(module) {
         return this.import(module).then(function() {
-          return send({require: module, makeProxy: true});
+          return server.send({require: module, makeProxy: true});
         });
-      };
+      },
 
-      function destroyProxy(proxy) {
+      destroy: function(proxy) {
         if (proxy && proxy['$$proxyId$$']) {
-          return send({destroy: proxy['$$proxyId$$']});
+          return this.send({destroy: proxy['$$proxyId$$']});
         } else {
           throw new Error("Invalid proxy object " + proxy);
         }
       }
 
-    return Object.freeze({
-      "worker": worker,
-      "init": init,
-      "send": send,
-      "received": received,
-      "import": importModule,
-      "proxy": proxyModule,
-      "close": closeWorker,
-      "destroy": destroyProxy,
-      "terminate": terminateWorker
     });
-  }
 
-  return Object.freeze({ create: create });
+    return server;
+
+  }});
 
 });

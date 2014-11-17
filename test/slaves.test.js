@@ -31,6 +31,9 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
           return [x, a, b()].join(' ');
         }
       },
+      fnc_d: function() {
+        return this.obj_d
+      },
       obj_d: {
         prp: null,
         fnc: function(x) {
@@ -193,6 +196,50 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
         expect(success[3]).to.be.null;
         expect(success[4]).to.be.equal('b-value a-value world');
         expect(success[5]).to.be.deep.equal([]);
+        return openSlave.close();
+      })
+
+      .then(function(success) {
+        done();
+      }, function(failure) {
+        done(failure);
+      })
+
+    });
+
+
+    /* ---------------------------------------------------------------------- */
+
+    /* Create a proxy to a more complex object (module_c) and check it */
+    it("should create a proxy on demand", function(done) {
+
+      var openSlave;
+      var openProxy;
+
+      slaves.create(debug)
+
+      .then(function(slave) {
+        openSlave = slave;
+        return slave.proxy("module_c");
+      })
+
+      .then(function(proxy) {
+        openProxy = proxy;
+        return proxy.fnc_d().asProxy();
+      })
+
+      .then(function(result) {
+        expect(result).to.be.a('object');
+        expect(result.$$proxyId$$).exist;
+        expect(result.$$proxyId$$).to.not.equal(openProxy.$$proxyId$$);
+        return promize.Promise.all([openProxy.obj_d.fnc('foo'), result.fnc('bar')]);
+      })
+
+      .then(function(success) {
+        expect(success).to.be.instanceof(Array);
+        expect(success.length).to.be.equal(2);
+        expect(success[0]).to.be.equal('b-value a-value foo');
+        expect(success[1]).to.be.equal('b-value a-value bar');
         return openSlave.close();
       })
 
