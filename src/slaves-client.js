@@ -69,7 +69,7 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
   /* MESSAGES                                                                 */
   /* ======================================================================== */
 
-  function Message(event) {
+  function Request(event) {
     var id = event.data.id;
     if (id == null) throw new Error("No ID for message " + JSON.stringify(event.data));
 
@@ -77,7 +77,7 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
     this.id = this.data.id;
   }
 
-  Message.prototype.accept = function(data) {
+  Request.prototype.accept = function(data) {
     if (data && typeof(data.then) === 'function') {
       var message = this;
       data.then(
@@ -93,7 +93,7 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
     }
   }
 
-  Message.prototype.reject = function(data) {
+  Request.prototype.reject = function(data) {
     $window.postMessage({ id: this.id, reject: messages.encode(data) });
   }
 
@@ -120,7 +120,7 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
 
     /* Our message handler */
     $window.onmessage = function(event) {
-      var message = new Message(event);
+      var message = new Request(event);
 
       /* Handler for messages */
       try {
