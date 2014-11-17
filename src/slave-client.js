@@ -6,7 +6,38 @@
  *
  * @module slave/client
  */
-Esquire.define('slave/client', ['$window', '$esquire', 'slave/messages', 'slave/proxy'], function($window, $esquire, messages, proxy) {
+Esquire.define('slave/client', ['$window', '$esquire', 'slave/messages'], function($window, $esquire, messages) {
+
+  function defineProxy(object, stack) {
+    if (! stack) stack = [];
+
+    /* Functions always get invoked */
+    if (typeof(object) === 'function') {
+      return true; // invoke
+    }
+
+    /* Non-array objects will be defined recursively */
+    if ((typeof(object) === 'object') && (!Array.isArray(object))) {
+
+      /* Just triple check */
+      if (stack.indexOf(object) >= 0) {
+        throw new TypeError("Unable to proxy object: circular reference detected");
+      }
+
+      /* Recursively define this object */
+      stack.push(object);
+      var definition = {};
+      for (var i in object) {
+        definition[i] = defineProxy(object[i], stack);
+      }
+      stack.pop();
+      return definition;
+
+    }
+
+    /* Everything else is just a getter */
+    return false;
+  }
 
   /**
    * Initialize the {@link Worker} side.
@@ -25,7 +56,7 @@ Esquire.define('slave/client', ['$window', '$esquire', 'slave/messages', 'slave/
         /* Only non-array objects and functions get proxied */
         var proxyId = "proxy_" + (++ lastProxyId);
         proxies[proxyId] = object;
-        var definition = proxy.defineProxy(object);
+        var definition = defineProxy(object);
         return { proxy: proxyId, object: object, definition: definition };
 
       } else {
@@ -112,11 +143,13 @@ Esquire.define('slave/client', ['$window', '$esquire', 'slave/messages', 'slave/
         else if (data.invoke) {
           var invoke = data.invoke;
           var object = proxies;
+          var target = null;
           for (var i in invoke.proxy) {
+            target = object;
             object = object[invoke.proxy[i]];
           }
 
-          var result = object.apply(object, invoke.arguments);
+          var result = object.apply(target, invoke.arguments);
           if (result && typeof(result.then) === 'function') {
             result.then(
               function(success) { resolve(id, success) },
