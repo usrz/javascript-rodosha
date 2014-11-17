@@ -40,9 +40,8 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
 
           } else {
             /* All other properties just request values asynchronously */
-            props.get = function() { return send({ get: { proxy: clone } })};
-            props.set = function(value) { send({ set: { value: value,  proxy: clone } })};
-
+            props['get'] = function() { return send({ proxy: { proxy: clone } })};
+            props['set'] = function(value) { send({ proxy: { value: value, proxy: clone } })};
           }
 
           /* Define the properties for this */
@@ -58,7 +57,7 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
     if (definition === true) {
       var clone = names.slice(0);
       return function() {
-        return send({ invoke: { proxy: clone, arguments: arguments }});
+        return send({ proxy: { proxy: clone, arguments: arguments }});
       }
     }
 

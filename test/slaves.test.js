@@ -16,7 +16,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
     }
   });
 
-  Esquire.define("module_c", ["module_a", "module_b", "$window"], function(a, b, $window) {
+  Esquire.define("module_c", ["module_a", "module_b", "promize", "$window"], function(a, b, promize, $window) {
     var array = [];
     return {
       prp_a: a,
@@ -35,8 +35,8 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
             throw new Error("module_c[obj_d][fnc] not running in worker");
           } else {
             var array = [b(), a, x];
-            if (this.prp) array.push(prp);
-            return [b(), a, x].join(' ');
+            if (this.prp) array.push(this.prp);
+            return array.join(' ');
           }
         }
       },
@@ -51,6 +51,20 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       },
       fnc_g: function() {
         throw new Error("This will always throw something");
+      },
+      fnc_h: function(success) {
+        var deferred = new promize.Deferred();
+        $window.setTimeout(function() {
+          deferred.resolve(success);
+        }, 100);
+        return deferred.promise;
+      },
+      fnc_i: function(failure) {
+        var deferred = new promize.Deferred();
+        $window.setTimeout(function() {
+          deferred.reject(new Error(failure));
+        }, 100);
+        return deferred.promise;
       }
     };
   });
@@ -93,7 +107,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       .then(function(proxy) {
         expect(proxy).to.be.a('string');
         expect(proxy).to.be.equal("a-value");
-        openSlave.close();
+        return openSlave.close();
       })
 
       .then(function(success) {
@@ -123,7 +137,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
 
       .then(function(result) {
         expect(result).to.be.equal("b-value");
-        openSlave.close();
+        return openSlave.close();
       })
 
       .then(function(success) {
@@ -153,33 +167,30 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
         var a = proxy.prp_a;
         var b = proxy.fnc_b();
         var c = proxy.fnc_c("hello");
-        var d = proxy.obj_d.fnc("world");
+        var d_p = proxy.obj_d.prp;
+        var d_f = proxy.obj_d.fnc("world");
         var e = proxy.arr_e;
-
-        expect(a).to.be.a('object');
-        expect(b).to.be.a('object');
-        expect(c).to.be.a('object');
-        expect(d).to.be.a('object');
-        expect(e).to.be.a('object');
 
         expect(a.then).to.be.a('function');
         expect(b.then).to.be.a('function');
         expect(c.then).to.be.a('function');
-        expect(d.then).to.be.a('function');
+        expect(d_p.then).to.be.a('function');
+        expect(d_f.then).to.be.a('function');
         expect(e.then).to.be.a('function');
 
-        return promize.Promise.all([a, b, c, d, e]);
+        return promize.Promise.all([a, b, c, d_p, d_f, e]);
       })
 
       .then(function(success) {
         expect(success).to.be.instanceof(Array);
-        expect(success.length).to.be.equal(5);
+        expect(success.length).to.be.equal(6);
         expect(success[0]).to.be.equal('a-value');
         expect(success[1]).to.be.equal('b-value');
         expect(success[2]).to.be.equal('hello a-value b-value');
-        expect(success[3]).to.be.equal('b-value a-value world');
-        expect(success[4]).to.be.deep.equal([]);
-        openSlave.close();
+        expect(success[3]).to.be.null;
+        expect(success[4]).to.be.equal('b-value a-value world');
+        expect(success[5]).to.be.deep.equal([]);
+        return openSlave.close();
       })
 
       .then(function(success) {
@@ -235,7 +246,51 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
         expect(success).to.be.instanceof(Array);
         expect(success).to.include(random);
         expect(success).to.not.be.deep.equal(rarray);
-        openSlave.close();
+        return openSlave.close();
+      })
+
+      .then(function(success) {
+        done();
+      }, function(failure) {
+        done(failure);
+      })
+
+    });
+
+    /* ---------------------------------------------------------------------- */
+
+    it("should correctly set remote values", function(done) {
+
+      var random = Math.floor(Math.random() * 0x0FFFFFFFF);
+      var openSlave;
+
+      slaves.create(debug)
+
+      .then(function(slave) {
+        openSlave = slave;
+        return slave.proxy("module_c");
+      })
+
+      .then(function(proxy) {
+        var oldPromise = proxy.obj_d.prp;
+
+        proxy.obj_d.prp = random;
+
+        var prpPromise = proxy.obj_d.prp;
+        var fncPromise = proxy.obj_d.fnc("then");
+
+        expect(prpPromise).to.be.a('object');
+        expect(fncPromise).to.be.a('object');
+        expect(prpPromise.then).to.be.a('function');
+        expect(fncPromise.then).to.be.a('function');
+
+        return promize.Promise.all([oldPromise, prpPromise, fncPromise]);
+      })
+
+      .then(function(success) {
+        expect(success).to.be.instanceof(Array);
+        expect(success).to.deep.equal([null, random, "b-value a-value then " + random]);
+        return openSlave.close();
       })
 
       .then(function(success) {
@@ -251,13 +306,11 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
     /* Make sure that exceptions are properly propagated from the worker */
     it("should correctly reject exceptions", function(done) {
 
-      var random = Math.floor(Math.random() * 0x0FFFFFFFF);
-      var rproxy = null;
-      var rarray = null;
-
+      var openSlave;
       slaves.create(debug)
 
       .then(function(slave) {
+        openSlave = slave;
         return slave.proxy("module_c");
       })
 
@@ -266,10 +319,112 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       })
 
       .then(function(success) {
-        throw new Error("Not rejected");
+        throw new Error("Not rejected: " + success);
       }, function(failure) {
         expect(failure).to.be.instanceof(messages.RemoteError);
-        expect(failure.message).to.be.equal("This will always throw something")
+        expect(failure.message).to.be.equal("This will always throw something");
+        return openSlave.close();
+      })
+
+      .then(function(success) {
+        done();
+      }, function(failure) {
+        done(failure);
+      })
+
+    });
+
+    /* ---------------------------------------------------------------------- */
+
+    it("should resolve a remote resolved promise", function(done) {
+
+      var result = "This should be thrown: " + Math.floor(Math.random() * 0x0FFFFFFFF);
+
+      slaves.create(debug)
+
+      .then(function(slave) {
+        return slave.proxy("module_c");
+      })
+
+      .then(function(proxy) {
+        return proxy.fnc_h(result);
+      })
+
+      .then(function(success) {
+        expect(success).to.be.equal(result);
+      })
+
+      .then(function(success) {
+        done();
+      }, function(failure) {
+        done(failure);
+      })
+
+    });
+
+    /* ---------------------------------------------------------------------- */
+
+    it("should reject a remote rejected promise", function(done) {
+
+      var result = "This should be good: " + Math.floor(Math.random() * 0x0FFFFFFFF);
+      var openSlave;
+
+      slaves.create(debug)
+
+      .then(function(slave) {
+        openSlave = slave;
+        return slave.proxy("module_c");
+      })
+
+      .then(function(proxy) {
+        return proxy.fnc_i(result);
+      })
+
+      .then(function(success) {
+        throw new Error("Not rejected: " + success);
+      }, function(failure) {
+        expect(failure).to.be.instanceof(messages.RemoteError);
+        expect(failure.message).to.be.equal(result);
+        return openSlave.close();
+      })
+
+      .then(function(success) {
+        done();
+      }, function(failure) {
+        done(failure);
+      })
+
+    });
+
+    /* ---------------------------------------------------------------------- */
+
+    it("should destroy a remote proxy", function(done) {
+
+      var openSlave;
+      var openProxy;
+
+      slaves.create(debug)
+
+      .then(function(slave) {
+        openSlave = slave;
+        return slave.proxy("module_c");
+      })
+
+      .then(function(proxy) {
+        openProxy = proxy;
+        return openSlave.destroy(proxy);
+      })
+
+      .then(function(success) {
+        return openProxy.obj_d.fnc();
+      })
+
+      .then(function(success) {
+        throw new Error("Not rejected: " + success);
+      }, function(failure) {
+        expect(failure).to.be.instanceof(messages.RemoteError);
+        expect(failure.message).to.be.equal("Proxy 'proxy_1.obj_d.fnc' not found");
+        return openSlave.close();
       })
 
       .then(function(success) {
@@ -355,7 +510,6 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       })
 
       .then(function(proxy) {
-        console.log("PROMISE IS", proxy);
         openProxy = proxy;
         var resultPromise = proxy(); // this will be processed
         var closePromise = openSlave.close(); // this will kill the slave
@@ -371,7 +525,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       })
 
       .then(function(success) {
-        throw new Error("Not rejected");
+        throw new Error("Not rejected: " + success);
       }, function(failure) {
         expect(failure).to.be.instanceof(Error);
         expect(failure.message).to.match(/Worker \w+ unavailable/);
@@ -385,7 +539,40 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
 
     });
 
+    /* ---------------------------------------------------------------------- */
 
+    /* Make sure that close will gracefully close the worker */
+    it("should terminate immediately", function(done) {
+
+      var termination = new Error("Terminated foolishly");
+      var openSlave;
+
+      slaves.create(debug)
+
+      .then(function(slave) {
+        openSlave = slave;
+        return slave.proxy("module_b");
+      })
+
+      .then(function(proxy) {
+        var resultPromise = proxy(); // this will die...
+        var closePromise = openSlave.terminate(termination);
+        return promize.Promise.all([resultPromise, closePromise]);
+      })
+
+      .then(function(result) {
+        throw new Error("Not rejected: " + success);
+      }, function(failure) {
+        expect(failure).to.be.equal(termination);
+      })
+
+      .then(function(success) {
+        done();
+      }, function(failure) {
+        done(failure);
+      })
+
+    });
 
   });
 });

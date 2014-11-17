@@ -8,6 +8,14 @@
  */
 Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], function($window, $esquire, messages) {
 
+  /* ======================================================================== */
+  /* OBJECT PROXIES                                                           */
+  /* ======================================================================== */
+
+  var proxies = {};
+  var lastProxyId = 0;
+
+  /* Create a proxy definition */
   function defineProxy(object, stack) {
     if (! stack) stack = [];
 
@@ -16,8 +24,8 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
       return true; // invoke
     }
 
-    /* Non-array objects will be defined recursively */
-    if ((typeof(object) === 'object') && (!Array.isArray(object))) {
+    /* Non-null, non-array objects will be defined recursively */
+    if (object && (typeof(object) === 'object') && (!Array.isArray(object))) {
 
       /* Just triple check */
       if (stack.indexOf(object) >= 0) {
@@ -39,6 +47,59 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
     return false;
   }
 
+  /* Make a proxy and return a valid response */
+  function makeProxy(object) {
+    if (((typeof(object) === 'object') && (!Array.isArray(object))) ||
+        (typeof(object) === 'function')) {
+
+      /* Only non-array objects and functions get proxied */
+      var proxyId = "proxy_" + (++ lastProxyId);
+      proxies[proxyId] = object;
+      var definition = defineProxy(object);
+      return { proxy: proxyId, definition: definition };
+
+    } else {
+
+      /* Arrays and normal objects go through as values */
+      return { value: object };
+    }
+  }
+
+  /* ======================================================================== */
+  /* MESSAGES                                                                 */
+  /* ======================================================================== */
+
+  function Message(event) {
+    var id = event.data.id;
+    if (id == null) throw new Error("No ID for message " + JSON.stringify(event.data));
+
+    this.data = messages.decode(event.data);
+    this.id = this.data.id;
+  }
+
+  Message.prototype.accept = function(data) {
+    if (data && typeof(data.then) === 'function') {
+      var message = this;
+      data.then(
+        function(success) { message.accept(success) },
+        function(failure) { message.reject(failure) }
+      );
+    } else if (data !== undefined) {
+      var result = this.data.makeProxy ? makeProxy(data) : messages.encode(data);
+      $window.postMessage({ id: this.id, resolve: result });
+    } else {
+      $window.postMessage({ id: this.id, resolve: true });
+    }
+  }
+
+  Message.prototype.reject = function(data) {
+    $window.postMessage({ id: this.id, reject: messages.encode(data) });
+  }
+
+  /* ======================================================================== */
+  /* CLIENT LOOP                                                              */
+  /* ======================================================================== */
+
   /**
    * Initialize the {@link Worker} side.
    *
@@ -46,130 +107,94 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
    */
   function init() {
 
-    /* Remember the proxies we created */
-    var proxies = {};
-    var lastProxyId = 0;
-    function makeProxy(object) {
-      if (((typeof(object) === 'object') && (!Array.isArray(object))) ||
-          (typeof(object) === 'function')) {
-
-        /* Only non-array objects and functions get proxied */
-        var proxyId = "proxy_" + (++ lastProxyId);
-        proxies[proxyId] = object;
-        var definition = defineProxy(object);
-        return { proxy: proxyId, object: object, definition: definition };
-
-      } else {
-
-        /* Arrays and normal objects go through as values */
-        return { value: object };
-      }
-    }
-
-    /* Encoding and decoding of messages */
-    var encode = messages.encode;
-    var decode = messages.decode;
-
     /* Logging emulation */
     $window.console = {
-      error: function() { $window.postMessage({id: 'console', method: 'error', arguments: encode(arguments)}) },
-      warn:  function() { $window.postMessage({id: 'console', method: 'warn',  arguments: encode(arguments)}) },
-      log:   function() { $window.postMessage({id: 'console', method: 'log',   arguments: encode(arguments)}) },
-      info:  function() { $window.postMessage({id: 'console', method: 'info',  arguments: encode(arguments)}) },
-      debug: function() { $window.postMessage({id: 'console', method: 'debug', arguments: encode(arguments)}) },
+      error: function() { $window.postMessage({id: 'console', method: 'error', arguments: messages.encode(arguments)}) },
+      warn:  function() { $window.postMessage({id: 'console', method: 'warn',  arguments: messages.encode(arguments)}) },
+      log:   function() { $window.postMessage({id: 'console', method: 'log',   arguments: messages.encode(arguments)}) },
+      info:  function() { $window.postMessage({id: 'console', method: 'info',  arguments: messages.encode(arguments)}) },
+      debug: function() { $window.postMessage({id: 'console', method: 'debug', arguments: messages.encode(arguments)}) },
       clear: function() {}
     };
 
-    /* Resolve remotely */
-    function resolve(id, data) {
-      if (data && typeof(data.then) === 'function') {
-        data.then(
-          function(success) { resolve(id, success) },
-          function(failure) { reject(id,  failure) });
-      } else {
-        $window.postMessage({ id: id, resolve: encode(data) });
-      }
-    }
-
-    /* Resolve remotely */
-    function reject(id, data) {
-      $window.postMessage({ id: id, reject: encode(data) });
-    }
-
     /* Our message handler */
     $window.onmessage = function(event) {
-
-      /* Basic check */
-      var id = event.data.id;
-      if (! id) {
-        console.error("No ID for message", event.data);
-      }
+      var message = new Message(event);
 
       /* Handler for messages */
-      else try {
-
-        /* Our data object */
-        var data = messages.decode(event.data);
+      try {
 
         /* Esquire definitions */
-        if (data.define) {
-          var module = data.define;
+        if (message.data.module) {
+          var module = message.data.module;
           if (Esquire.modules[module.name]) {
             console.warn("Module '" + module.name + "' already defined");
           } else {
             console.debug("Module '" + module.name + "' defined successfully");
             Esquire.define(module);
           }
-          resolve(id, Esquire.module(module.name).name);
+          message.accept(Esquire.module(module.name).name);
         }
 
         /* Proxy object request */
-        else if (data.proxy) {
-          resolve(id, makeProxy($esquire.require(data.proxy)));
+        else if (message.data.require) {
+          message.accept($esquire.require(message.data.require));
         }
 
-        /* Return value for proxied object */
-        else if (data.get) {
-          var get = data.get;
+        /* Invoke method on or return value for proxied object */
+        else if (message.data.proxy) {
+          var proxy = message.data.proxy;
           var result = proxies;
-          for (var i in get.proxy) {
-            result = result[get.proxy[i]];
-          }
-
-          resolve(id, result);
-        }
-
-        /* Invoke method on proxy */
-        else if (data.invoke) {
-          var invoke = data.invoke;
-          var object = proxies;
           var target = null;
-          for (var i in invoke.proxy) {
-            target = object;
-            object = object[invoke.proxy[i]];
+          var targetName = null;
+          for (var i in proxy.proxy) {
+            var property = proxy.proxy[i];
+            if (property in result) {
+              target = result;
+              targetName = property;
+              result = result[property];
+            } else {
+              throw new Error("Proxy '" + proxy.proxy.join('.') + "' not found");
+            }
           }
 
-          resolve(id, object.apply(target, invoke.arguments));
+          if (typeof(result) === 'function') {
+            message.accept(result.apply(target, proxy.arguments));
+          } else if (proxy.value) {
+            message.accept(target[targetName] = proxy.value);
+          } else {
+            message.accept(result);
+          }
+        }
+
+        /* Gracefully close this */
+        else if (message.data.destroy) {
+          var proxy = proxies[message.data.destroy];
+          if (proxy) {
+            delete proxies[message.data.destroy];
+            message.accept();
+          } else {
+            message.reject();
+          }
+        }
+
+        /* Gracefully close this */
+        else if (message.data.close) {
+          $window.close();
+          message.accept();
         }
 
         /* Any other message fails */
-        else if (data.close) {
-          resolve(id, { close: $window.close() });
-        }
-
-        /* Any other message fails */
-        else {
-          throw new Error("Usupported message: " + JSON.stringify(event.data));
-        }
+        else throw new Error("Usupported message: " + JSON.stringify(event.data));
 
       } catch (error) {
-        reject(id, error);
+        message.reject(error);
       }
     }
 
     /* Decode context functions on init */
     console.debug("Initialized worker thread from " + $window.location.href);
-    resolve('initialized', Object.keys(Esquire.modules));
+    $window.postMessage({id: 'initialized', modules: Object.keys(Esquire.modules)});
   };
 
   return Object.freeze({ init: init });

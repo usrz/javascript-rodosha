@@ -8,10 +8,6 @@ function(promize, workers, messages, proxy) {
 
   /* ID generator */
   var lastId = 0;
-  function makeId() {
-    var id = lastId ++;
-    return id.toString(16);
-  }
 
   /* ======================================================================== */
   /* SLAVE OBJECT                                                             */
@@ -20,7 +16,7 @@ function(promize, workers, messages, proxy) {
   function createSlave(debug) {
 
     /* The ID of this worker (for reference) */
-    var workerId = makeId();
+    var workerId = lastId ++;
 
     /* Our deferred for initialization */
     var initialized = new promize.Deferred();
@@ -35,7 +31,9 @@ function(promize, workers, messages, proxy) {
     var slave  = {
       "import": importModule,
       "proxy": proxyModule,
-      "close": close
+      "close": closeWorker,
+      "destroy": destroyProxy,
+      "terminate": terminateWorker
     };
 
     /* The worker (created at the end) */
@@ -51,42 +49,22 @@ function(promize, workers, messages, proxy) {
       /* Create and remember our deferred */
       var deferred = new promize.Deferred();
 
-      /* Inject our extra properties in the promise */
-      var sent = false;
+      /* If debugging, debug! */
+      if (debug) {
+        console.log("Sending to Worker[" + workerId + "]\n" + JSON.stringify(message, null, 2));
+      }
 
-      Object.defineProperties(deferred.promise, {
-        "sent": {
-          enumerable: true,
-          configurable: false,
-          get: function() { return sent }
-        },
-        "asProxy": {
-          enumerable: true,
-          configurable: false,
-          get: function() {
-            if (sent) throw new Error("Message already sent");
-            message.asProxy = true;
-            return this;
-          }
-        }
-      });
+      try {
+        /* Prepare the message for sending */
+        message.id = lastId ++;
+        message = messages.encode(message);
+        pendingMessages[message.id] = deferred;
 
-      /* Eventually send the message */
-      setTimeout(function() {
-        if (debug) console.log("Sending to Worker[" + workerId + "]\n" + JSON.stringify(message, null, 2));
-        try {
-          /* Prepare the message for sending */
-          message.id = makeId();
-          message = messages.encode(message);
-          pendingMessages[message.id] = deferred;
-
-          /* Send it out */
-          worker.postMessage(message);
-          sent = true;
-        } catch (error) {
-          deferred.reject(error);
-        }
-      });
+        /* Send it out */
+        worker.postMessage(message);
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       /* Return our promise */
       return deferred.promise;
@@ -127,7 +105,7 @@ function(promize, workers, messages, proxy) {
       for (var i in injectables) {
 
         /* Message id, deferred, and (derived) promise */
-        promises.push(send({define: injectables[i]}).then(function(moduleName) {
+        promises.push(send({module: injectables[i]}).then(function(moduleName) {
           injectedModules[moduleName] = true;
           return moduleName;
         }));
@@ -146,7 +124,7 @@ function(promize, workers, messages, proxy) {
       return this.import(module).then(function() {
 
         /* Once the modules have been imported, request a proxy */
-        return send({proxy: module}).then(function(success) {
+        return send({require: module, makeProxy: true}).then(function(success) {
           if (success.value) {
             /* Static value? Already decoded, just go for it */
             return success.value;
@@ -154,7 +132,9 @@ function(promize, workers, messages, proxy) {
             /* Full definition, make a proxy */
             var definition = success.definition;
             var proxyId = success.proxy;
-            return proxy.makeProxy(definition, proxyId, send);
+            return Object.defineProperty(proxy.makeProxy(definition, proxyId, send), "$$proxyId$$", {
+              enumerable: false, configurable: false, get: function() { return proxyId }
+            });
           }
         });
       });
@@ -163,14 +143,14 @@ function(promize, workers, messages, proxy) {
     /* ---------------------------------------------------------------------- */
 
     /** Create a proxy object for a module defined in the worker. */
-    function close() {
+    function closeWorker() {
       if (! worker) return promize.Promise.resolve();
       return send({close: true}).then(function(succcess) {
-        terminate(new Error("Worker " + workerId + " closed"));
+        terminateWorker(new Error("Worker " + workerId + " closed"));
       });
     };
 
-    function terminate(cause) {
+    function terminateWorker(cause) {
       if (worker) {
         worker.terminate();
         worker = null;
@@ -178,8 +158,16 @@ function(promize, workers, messages, proxy) {
         for (var msgid in pendingMessages) {
           var message = pendingMessages[msgid];
           delete pendingMessages[msgid];
-          message.reject(error);
+          message.reject(cause);
         }
+      }
+    }
+
+    function destroyProxy(proxy) {
+      if (proxy && proxy['$$proxyId$$']) {
+        return send({destroy: proxy['$$proxyId$$']});
+      } else {
+        throw new Error("Invalid proxy object " + proxy);
       }
     }
 
@@ -222,8 +210,8 @@ function(promize, workers, messages, proxy) {
 
           /* Initialization handler */
           case 'initialized':
-            for (var i in data.resolve) {
-                injectedModules[data.resolve[i]] = true;
+            for (var i in data.modules) {
+                injectedModules[data.modules[i]] = true;
             }
             initialized.resolve(slave);
             return;
@@ -236,7 +224,7 @@ function(promize, workers, messages, proxy) {
               if (data.hasOwnProperty('resolve')) {
                 deferred.resolve(data.resolve);
               } else if (data.hasOwnProperty('reject')) {
-                console.warn("Rejected message " + msgid, data);
+                if (debug) console.warn("Rejected message " + msgid, data);
                 deferred.reject(data.reject);
               } else {
                 console.warn("Invalid message data " + msgid, data);
