@@ -5,31 +5,7 @@
  *
  * @module slave/proxy
  */
-Esquire.define('slave/proxy', ['promize'], function(promize) {
-
-  function sendOrProxy(send, message) {
-    var deferred = new promize.Deferred();
-    var sent = false;
-    window.setTimeout(function() {
-      sent = true;
-      deferred.resolve(send(message));
-      // send(message).then(
-      //   function(success) { deferred.resolve(success) },
-      //   function(failure) { deferred.reject(failure) }
-      // );
-    });
-
-    Object.defineProperty(deferred.promise, "asPromise", {
-      enumerable: true, configurable: false,
-      get: function() {
-        if (sent) throw new Error("Message already sent");
-        message.asProxy = true;
-        return this;
-      }
-    });
-
-    return deferred.promise;
-  }
+Esquire.define('slaves/proxy', ['promize'], function(promize) {
 
   /**
    * Wrap the specified object replacing all functions with remote executors
@@ -64,8 +40,8 @@ Esquire.define('slave/proxy', ['promize'], function(promize) {
 
           } else {
             /* All other properties just request values asynchronously */
-            props.get = function() { return sendOrProxy(send, { get: { proxy: clone } })};
-            props.set = function() { return send({ set: { proxy: clone } })};
+            props.get = function() { return send({ get: { proxy: clone } })};
+            props.set = function(value) { send({ set: { value: value,  proxy: clone } })};
 
           }
 
@@ -81,21 +57,8 @@ Esquire.define('slave/proxy', ['promize'], function(promize) {
     /* The definition is "true" meaning "invoke me" */
     if (definition === true) {
       var clone = names.slice(0);
-      // return sendOrProxy(send, { invoke: { proxy: clone, arguments: arguments }});
       return function() {
-        return sendOrProxy(send, { invoke: { proxy: clone, arguments: arguments }});
-        // var args = arguments;
-        // var deferred = new promize.Deferred();
-        // window.setTimeout(function() {
-        //   console.log("SEND", JSON.stringify({ invoke: { proxy: clone, arguments: args }}));
-        //   send({ invoke: { proxy: clone, arguments: args }}).then(
-        //     function(success) { console.log("OK", success); deferred.resolve(success) },
-        //     function(failure) { console.log("NO", failure); deferred.reject(failure) }
-        //   );
-        // });
-        // return deferred.promise;
-
-        //return send({ invoke: { proxy: clone, arguments: arguments }});
+        return send({ invoke: { proxy: clone, arguments: arguments }});
       }
     }
 

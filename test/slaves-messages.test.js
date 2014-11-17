@@ -1,6 +1,6 @@
 'use strict';
 
-esquire(['slave/messages'], function(messages) {
+esquire(['slaves/messages'], function(messages) {
 
   var RemoteError = messages.RemoteError;
   var encode = messages.encode;
@@ -126,12 +126,12 @@ esquire(['slave/messages'], function(messages) {
     });
 
     it("should encode and decode a module", function() {
-      var module = Esquire.module('slave/messages');
+      var module = Esquire.module('slaves/messages');
       var encoded = encode({id: 123, define: module});
       var decoded = decode(encoded);
       expect(decoded.id).to.equal(123);
       expect(decoded.define).to.exist;
-      expect(decoded.define.name).to.equal('slave/messages');
+      expect(decoded.define.name).to.equal('slaves/messages');
       expect(decoded.define.dependencies).to.deep.equal([]);
       expect(decoded.define.constructor.toString()).to.equal(module.constructor.toString());
     });

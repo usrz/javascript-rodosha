@@ -6,7 +6,7 @@
  *
  * @module slave/messages
  */
-Esquire.define('slave/messages', [], function messages() {
+Esquire.define('slaves/messages', [], function messages() {
 
   /**
    * @classdesc An {@link Error} received from or sent to a {@link Worker}.

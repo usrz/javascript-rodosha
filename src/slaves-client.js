@@ -6,7 +6,7 @@
  *
  * @module slave/client
  */
-Esquire.define('slave/client', ['$window', '$esquire', 'slave/messages'], function($window, $esquire, messages) {
+Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], function($window, $esquire, messages) {
 
   function defineProxy(object, stack) {
     if (! stack) stack = [];
@@ -82,7 +82,13 @@ Esquire.define('slave/client', ['$window', '$esquire', 'slave/messages'], functi
 
     /* Resolve remotely */
     function resolve(id, data) {
-      $window.postMessage({ id: id, resolve: encode(data) });
+      if (data && typeof(data.then) === 'function') {
+        data.then(
+          function(success) { resolve(id, success) },
+          function(failure) { reject(id,  failure) });
+      } else {
+        $window.postMessage({ id: id, resolve: encode(data) });
+      }
     }
 
     /* Resolve remotely */
@@ -130,13 +136,7 @@ Esquire.define('slave/client', ['$window', '$esquire', 'slave/messages'], functi
             result = result[get.proxy[i]];
           }
 
-          if (result && typeof(result.then) === 'function') {
-            result.then(
-              function(success) { resolve(id, success) },
-              function(failure) { reject(id,  failure) });
-          } else {
-            resolve(id, result);
-          }
+          resolve(id, result);
         }
 
         /* Invoke method on proxy */
@@ -149,14 +149,12 @@ Esquire.define('slave/client', ['$window', '$esquire', 'slave/messages'], functi
             object = object[invoke.proxy[i]];
           }
 
-          var result = object.apply(target, invoke.arguments);
-          if (result && typeof(result.then) === 'function') {
-            result.then(
-              function(success) { resolve(id, success) },
-              function(failure) { reject(id,  failure) });
-          } else {
-            resolve(id, result);
-          }
+          resolve(id, object.apply(target, invoke.arguments));
+        }
+
+        /* Any other message fails */
+        else if (data.close) {
+          resolve(id, { close: $window.close() });
         }
 
         /* Any other message fails */

@@ -1,9 +1,9 @@
 'use strict';
 
-Esquire.define('slave', [ 'promize',
-                          'slave/workers',
-                          'slave/messages',
-                          'slave/proxy' ],
+Esquire.define('slaves', [ 'promize',
+                           'slaves/workers',
+                           'slaves/messages',
+                           'slaves/proxy' ],
 function(promize, workers, messages, proxy) {
 
   /* ID generator */
@@ -34,7 +34,8 @@ function(promize, workers, messages, proxy) {
     /* The slave to be returned */
     var slave  = {
       "import": importModule,
-      "proxy": proxyModule
+      "proxy": proxyModule,
+      "close": close
     };
 
     /* The worker (created at the end) */
@@ -44,14 +45,50 @@ function(promize, workers, messages, proxy) {
 
     /* Encode and send a message to the worker */
     function send(message) {
+      /* Sanity checks */
+      if (! worker) throw new Error("Worker " + workerId + " unavailable");
+
+      /* Create and remember our deferred */
       var deferred = new promize.Deferred();
-      message = messages.encode(message);
-      message.id = makeId();
-      pendingMessages[message.id] = deferred;
-      if (debug) {
-        console.log("Sending to Worker[" + workerId + "]\n" + JSON.stringify(message, null, 2));
-      }
-      worker.postMessage(message);
+
+      /* Inject our extra properties in the promise */
+      var sent = false;
+
+      Object.defineProperties(deferred.promise, {
+        "sent": {
+          enumerable: true,
+          configurable: false,
+          get: function() { return sent }
+        },
+        "asProxy": {
+          enumerable: true,
+          configurable: false,
+          get: function() {
+            if (sent) throw new Error("Message already sent");
+            message.asProxy = true;
+            return this;
+          }
+        }
+      });
+
+      /* Eventually send the message */
+      setTimeout(function() {
+        if (debug) console.log("Sending to Worker[" + workerId + "]\n" + JSON.stringify(message, null, 2));
+        try {
+          /* Prepare the message for sending */
+          message.id = makeId();
+          message = messages.encode(message);
+          pendingMessages[message.id] = deferred;
+
+          /* Send it out */
+          worker.postMessage(message);
+          sent = true;
+        } catch (error) {
+          deferred.reject(error);
+        }
+      });
+
+      /* Return our promise */
       return deferred.promise;
     }
 
@@ -122,6 +159,29 @@ function(promize, workers, messages, proxy) {
         });
       });
     };
+
+    /* ---------------------------------------------------------------------- */
+
+    /** Create a proxy object for a module defined in the worker. */
+    function close() {
+      if (! worker) return promize.Promise.resolve();
+      return send({close: true}).then(function(succcess) {
+        terminate(new Error("Worker " + workerId + " closed"));
+      });
+    };
+
+    function terminate(cause) {
+      if (worker) {
+        worker.terminate();
+        worker = null;
+        cause = cause || new Error("Worker " + workerId + " terminated");
+        for (var msgid in pendingMessages) {
+          var message = pendingMessages[msgid];
+          delete pendingMessages[msgid];
+          message.reject(error);
+        }
+      }
+    }
 
     /* ---------------------------------------------------------------------- */
 
@@ -202,9 +262,9 @@ function(promize, workers, messages, proxy) {
     /* Create our Blob URL */
     var script = [];
     script.push("(" + Esquire.$$script + ")(self);\n");
-    script.push(Esquire.module("slave/messages").$$script + ";\n");
-    script.push(Esquire.module("slave/client").$$script + ";\n");
-    script.push("new Esquire().require('slave/client').init();\n");
+    script.push(Esquire.module("slaves/messages").$$script + ";\n");
+    script.push(Esquire.module("slaves/client").$$script + ";\n");
+    script.push("new Esquire().require('slaves/client').init();\n");
 
     /* Dump our code for debugging */
     if (debug) {

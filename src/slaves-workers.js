@@ -5,7 +5,7 @@
  *
  * @module slave/workers
  */
-Esquire.define('slave/workers', ['$window'], function($window) {
+Esquire.define('slaves/workers', ['$window'], function($window) {
 
   /* Sanity check */
   if (! $window.Worker) throw new Error("Browser does not support workers");
