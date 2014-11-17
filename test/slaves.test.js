@@ -3,6 +3,9 @@
 esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire, slaves, promize, messages) {
 
   var debug = false;
+  var itx = function() {
+    return (debug ? it.skip : it).apply(null, arguments);
+  }
 
   Esquire.define("module_a", function() { return "a-value"});
 
@@ -438,7 +441,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
     /* ---------------------------------------------------------------------- */
 
     /* Simple timings for a number of messages */
-    it("should validate performance", function(done) {
+    itx("should validate performance", function(done) {
 
       var start = new Date().getTime();
       var count = 1000;
