@@ -110,11 +110,11 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
 
     /* Logging emulation */
     $window.console = {
-      error: function() { $window.postMessage({id: 'console', method: 'error', arguments: messages.encode(arguments)}) },
-      warn:  function() { $window.postMessage({id: 'console', method: 'warn',  arguments: messages.encode(arguments)}) },
-      log:   function() { $window.postMessage({id: 'console', method: 'log',   arguments: messages.encode(arguments)}) },
-      info:  function() { $window.postMessage({id: 'console', method: 'info',  arguments: messages.encode(arguments)}) },
-      debug: function() { $window.postMessage({id: 'console', method: 'debug', arguments: messages.encode(arguments)}) },
+      error: function() { $window.postMessage({console: 'error', arguments: messages.encode(arguments)}) },
+      warn:  function() { $window.postMessage({console: 'warn',  arguments: messages.encode(arguments)}) },
+      log:   function() { $window.postMessage({console: 'log',   arguments: messages.encode(arguments)}) },
+      info:  function() { $window.postMessage({console: 'info',  arguments: messages.encode(arguments)}) },
+      debug: function() { $window.postMessage({console: 'debug', arguments: messages.encode(arguments)}) },
       clear: function() {}
     };
 
@@ -193,8 +193,8 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
     }
 
     /* Decode context functions on init */
-    console.debug("Initialized worker thread from " + $window.location.href);
-    $window.postMessage({id: 'initialized', modules: Object.keys(Esquire.modules)});
+    console.log("Initialized worker thread from " + $window.location.href);
+    $window.postMessage({initialized: Object.keys(Esquire.modules)});
   };
 
   return Object.freeze({ init: init });
