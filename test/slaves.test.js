@@ -560,7 +560,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
         return promize.Promise.all([resultPromise, closePromise]);
       })
 
-      .then(function(result) {
+      .then(function(success) {
         throw new Error("Not rejected: " + success);
       }, function(failure) {
         expect(failure).to.be.equal(termination);
