@@ -9,9 +9,9 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
 
   Esquire.define("module_a", function() { return "a-value"});
 
-  Esquire.define("module_b", ['$window'], function($window) {
+  Esquire.define("module_b", ['$global'], function($global) {
     return function() {
-      if ($window.document) {
+      if ($global.document) {
         throw new Error("module_b not running in worker");
       } else {
         return "b-value"
@@ -19,13 +19,13 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
     }
   });
 
-  Esquire.define("module_c", ["module_a", "module_b", "promize", "$window"], function(a, b, promize, $window) {
+  Esquire.define("module_c", ["module_a", "module_b", "promize", "$global"], function(a, b, promize, $global) {
     var array = [];
     return {
       prp_a: a,
       fnc_b: b,
       fnc_c: function(x) {
-        if ($window.document) {
+        if ($global.document) {
           throw new Error("module_c[fnc_c] not running in worker");
         } else {
           return [x, a, b()].join(' ');
@@ -37,7 +37,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       obj_d: {
         prp: null,
         fnc: function(x) {
-          if ($window.document) {
+          if ($global.document) {
             throw new Error("module_c[obj_d][fnc] not running in worker");
           } else {
             var array = [b(), a, x];
@@ -48,7 +48,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       },
       arr_e: array,
       fnc_f: function(x) {
-        if ($window.document) {
+        if ($global.document) {
           throw new Error("module_c[fnc_f] not running in worker");
         } else {
           this.arr_e.push(x);
@@ -60,14 +60,14 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       },
       fnc_h: function(success) {
         var deferred = new promize.Deferred();
-        $window.setTimeout(function() {
+        $global.setTimeout(function() {
           deferred.resolve(success);
         }, 100);
         return deferred.promise;
       },
       fnc_i: function(failure) {
         var deferred = new promize.Deferred();
-        $window.setTimeout(function() {
+        $global.setTimeout(function() {
           deferred.reject(new Error(failure));
         }, 100);
         return deferred.promise;

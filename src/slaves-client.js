@@ -6,7 +6,7 @@
  *
  * @module slaves/client
  */
-Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], function($window, $esquire, messages) {
+Esquire.define('slaves/client', ['$global', '$esquire', 'slaves/messages'], function($global, $esquire, messages) {
 
   /* ======================================================================== */
   /* OBJECT PROXIES                                                           */
@@ -87,14 +87,14 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
     } else if (data !== undefined) {
       var response = this.data.makeProxy ? makeProxy(data) : { resolve: messages.encode(data) };
       response.id = this.id;
-      $window.postMessage(response);
+      $global.postMessage(response);
     } else {
-      $window.postMessage({ id: this.id, resolve: true });
+      $global.postMessage({ id: this.id, resolve: true });
     }
   }
 
   Request.prototype.reject = function(data) {
-    $window.postMessage({ id: this.id, reject: messages.encode(data) });
+    $global.postMessage({ id: this.id, reject: messages.encode(data) });
   }
 
   /* ======================================================================== */
@@ -111,19 +111,19 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
   return Object.freeze({ init: function(debug) {
 
     /* Logging emulation */
-    $window.console = {
-      error: function() { $window.postMessage({console: 'error', arguments: messages.encode(arguments)}) },
-      warn:  function() { $window.postMessage({console: 'warn',  arguments: messages.encode(arguments)}) },
-      log:   function() { $window.postMessage({console: 'log',   arguments: messages.encode(arguments)}) },
-      info:  function() { $window.postMessage({console: 'info',  arguments: messages.encode(arguments)}) },
+    var console = $global.console = {
+      error: function() { $global.postMessage({console: 'error', arguments: messages.encode(arguments)}) },
+      warn:  function() { $global.postMessage({console: 'warn',  arguments: messages.encode(arguments)}) },
+      log:   function() { $global.postMessage({console: 'log',   arguments: messages.encode(arguments)}) },
+      info:  function() { $global.postMessage({console: 'info',  arguments: messages.encode(arguments)}) },
       debug: debug ?
-             function() { $window.postMessage({console: 'debug', arguments: messages.encode(arguments)}) }:
+             function() { $global.postMessage({console: 'debug', arguments: messages.encode(arguments)}) }:
              function() {},
       clear: function() {}
     };
 
     /* Our message handler */
-    $window.onmessage = function(event) {
+    $global.onmessage = function(event) {
       var message = new Request(event);
 
       if (message.foo) {console.log("FOO IS", message.foo)};
@@ -186,7 +186,7 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
 
         /* Gracefully close this */
         else if (message.data.close) {
-          $window.close();
+          $global.close();
           message.accept();
         }
 
@@ -199,8 +199,8 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
     }
 
     /* Decode context functions on init */
-    console.log("Initialized worker thread from " + $window.location.href);
-    $window.postMessage({initialized: Object.keys(Esquire.modules)});
+    console.log("Initialized worker thread from " + $global.location.href);
+    $global.postMessage({initialized: Object.keys(Esquire.modules)});
   }});
 
 });

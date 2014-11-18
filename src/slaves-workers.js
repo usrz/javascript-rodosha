@@ -5,12 +5,12 @@
  *
  * @module slaves/workers
  */
-Esquire.define('slaves/workers', ['$window'], function($window) {
+Esquire.define('slaves/workers', ['$global'], function($global) {
 
   /* Sanity check */
-  if (! $window.Worker) throw new Error("Browser does not support workers");
-  if (! $window.Blob) throw new Error("Browser does not support blobs");
-  var URL = $window.URL || $window.webkitURL || $window.mozURL;
+  if (! $global.Worker) throw new Error("Browser does not support workers");
+  if (! $global.Blob) throw new Error("Browser does not support blobs");
+  var URL = $global.URL || $global.webkitURL || $global.mozURL;
   if (! URL) throw new Error("Browser does not support URLs")
   if (! URL.createObjectURL) throw new Error("Browser does not support object URLs")
 
@@ -28,17 +28,17 @@ Esquire.define('slaves/workers', ['$window'], function($window) {
     if (! contentType) contentType = "application/javascript";
     try {
       /* Try normal construction */
-      return new $window.Blob(content, { type: contentType });
+      return new $global.Blob(content, { type: contentType });
 
     } catch (error) {
       /* Ouch! Use the builder? :-) */
 
-      var Builder = $window.BlobBuilder
-                 || $window.WebKitBlobBuilder
-                 || $window.MozBlobBuilder;
+      var Builder = $global.BlobBuilder
+                 || $global.WebKitBlobBuilder
+                 || $global.MozBlobBuilder;
 
       /* Fail on no builders */
-      if (! Builder) throw new Error("Blob builders unsupported");
+      if (! Builder) throw error; // new Error("Blob builders unsupported");
 
       /* Instrument the builder */
       var builder = new Builder();
@@ -64,7 +64,7 @@ Esquire.define('slaves/workers', ['$window'], function($window) {
    * @returns string The URL for the {@link Blob}
    */
   function makeURL(content, contentType) {
-    if (content instanceof $window.Blob) {
+    if (content instanceof $global.Blob) {
       return URL.createObjectURL(content, contentType);
     } else {
       return URL.createObjectURL(makeBlob(content));
@@ -85,9 +85,9 @@ Esquire.define('slaves/workers', ['$window'], function($window) {
    */
   function makeWorker(content, contentType) {
     if ((typeof(content) === 'string') && content.match(/^blob:/)) {
-      return new $window.Worker(content);
+      return new $global.Worker(content);
     } else {
-      return new $window.Worker(makeURL(content, contentType));
+      return new $global.Worker(makeURL(content, contentType));
     }
   }
 
