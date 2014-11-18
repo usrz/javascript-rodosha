@@ -1,7 +1,7 @@
 {
-  "name": "slave",
+  "name": "slaves",
   "version": "0.0.0",
-  "description": "USRZ Slave API",
+  "description": "USRZ Slaves API",
   "main": "index.js",
   "repository": {
     "type": "git",
