@@ -2,9 +2,9 @@
 
 /**
  * A module wrapping the {@link Slave} client code (basically the code executed
- * by the {@link Worker} when starting up.
+ * by the {@link Worker} in order to process messages from the {@link Server}).
  *
- * @module slave/client
+ * @module slaves/client
  */
 Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], function($window, $esquire, messages) {
 
@@ -104,7 +104,9 @@ Esquire.define('slaves/client', ['$window', '$esquire', 'slaves/messages'], func
   /**
    * Initialize the {@link Worker} side.
    *
-   * @function init
+   * @function module:slaves/client.init
+   * @param {boolean} [debug] - If `true` debug messages will be sent over and
+   *                            logged on the {@link Server}'s console.
    */
   return Object.freeze({ init: function(debug) {
 

@@ -3,9 +3,42 @@
 /**
  * A module providing a utility function to wrap remote {@link Worker} objects.
  *
- * @module slave/proxy
+ * @module slaves/proxy
  */
-Esquire.define('slaves/proxy', [], function() {
+Esquire.define('slaves/proxy', ['promize'], function(promize) {
+
+  /**
+   *
+   */
+  function ProxyPromise(message, send) {
+    var promise = null;
+
+    this.then = function(onSuccess, onFailure) {
+      /* Send the message if we haven't done so already */
+      try {
+        if (promise == null) promise = send(message);
+      } catch (error) {
+        promise = promize.Promise.reject(error);
+      }
+      /* Set up the promise's handlers */
+      return promise.then(onSuccess, onFailure);
+    }
+
+    this.asProxy = function(proxy) {
+      /* If we haven't sent the message, request a new proxy object */
+      if (promise != null) throw new Error("Message already sent");
+      if (proxy === undefined) proxy = true;
+      if (proxy) message.makeProxy = true;
+      return this;
+    }
+
+  };
+
+  ProxyPromise.prototype.catch = function(onFailure) {
+    return this.then(null, onFailure);
+  }
+
+  /* ======================================================================== */
 
   /**
    * Wrap the specified object replacing all functions with remote executors
@@ -44,7 +77,7 @@ Esquire.define('slaves/proxy', [], function() {
           } else {
             /* All other properties just request values asynchronously */
             props['get'] = function() { return send({ proxy: { proxy: clone } })};
-            props['set'] = function(value) { send({ proxy: { value: value, proxy: clone } }) };
+            props['set'] = function(v) { send({ proxy: { value: v, proxy: clone } }) };
           }
 
           /* Define the properties for this */
@@ -60,7 +93,9 @@ Esquire.define('slaves/proxy', [], function() {
     if (definition === true) {
       var clone = names.slice(0);
       return function() {
-        return send({ proxy: { proxy: clone, arguments: arguments }});
+        /* Prepare our message and return a promise to send */
+        var message = { proxy: { proxy: clone, arguments: arguments }};
+        return new ProxyPromise(message, send);
       }
     }
 
@@ -76,9 +111,6 @@ Esquire.define('slaves/proxy', [], function() {
     });
   }
 
-  return Object.freeze({
-    makeProxy: makeProxy,
-    buildProxy: buildProxy
-  });
+  return Object.freeze({ buildProxy: buildProxy });
 
 });

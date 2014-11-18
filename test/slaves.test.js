@@ -71,6 +71,9 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
           deferred.reject(new Error(failure));
         }, 100);
         return deferred.promise;
+      },
+      fnc_j: function(num) {
+        return "count " + num;
       }
     };
   });
@@ -211,7 +214,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
     /* ---------------------------------------------------------------------- */
 
     /* Create a proxy to a more complex object (module_c) and check it */
-    it("should create a proxy on demand", function(done) {
+    it("should create a proxy on-demand", function(done) {
 
       var openSlave;
       var openProxy;
@@ -230,7 +233,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
 
       .then(function(result) {
         expect(result).to.be.a('object');
-        expect(result.$$proxyId$$).exist;
+        expect(result.$$proxyId$$, "result.$$proxyId$$").exist;
         expect(result.$$proxyId$$).to.not.equal(openProxy.$$proxyId$$);
         return promize.Promise.all([openProxy.obj_d.fnc('foo'), result.fnc('bar')]);
       })
@@ -502,7 +505,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
 
         openSlave = slave;
 
-        var promise = slave.proxy("module_b");
+        var promise = slave.proxy("module_c");
         start = new Date().getTime();
         return promise;
       })
@@ -514,7 +517,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
 
         var promises = [];
         for (var i = 0; i < count; i ++) {
-          promises.push(proxy());
+          promises.push(proxy.fnc_j(i));
         }
         now = new Date().getTime();
         console.log("Created " + promises.length + " messages in " + (now - start) + " ms");
@@ -527,8 +530,11 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       .then(function(results) {
         var now = new Date().getTime();
         var avg = Number((results.length * 1000) / (now - start)).toFixed(3);
-        console.log("Received " + results.length + " responses in " + (now - start) + " ms (avg " + avg + " msg/s)");
+        console.warn("Received " + results.length + " responses in " + (now - start) + " ms (avg " + avg + " msg/s)");
         expect(results.length).to.equal(count);
+        for (var i in results) {
+          expect(results[i], "Result at index " + i).to.be.equal('count ' + i);
+        }
         var promise = openSlave.close();
         start = new Date().getTime();
         return promise;
@@ -561,8 +567,8 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
 
       .then(function(proxy) {
         openProxy = proxy;
-        var resultPromise = proxy(); // this will be processed
-        var closePromise = openSlave.close(); // this will kill the slave
+        var resultPromise = proxy().then(); // make sure message gets sent ...
+        var closePromise = openSlave.close(); // ... before slave is closed!
         return promize.Promise.all([resultPromise, closePromise]);
       })
 
@@ -605,9 +611,9 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
       })
 
       .then(function(proxy) {
-        var resultPromise = proxy(); // this will die...
-        var closePromise = openSlave.terminate(termination);
-        return promize.Promise.all([resultPromise, closePromise]);
+        var resultPromise = proxy().then(); // make sure message gets sent ...
+        openSlave.terminate(termination);   // ... before slave is terminated!
+        return resultPromise;
       })
 
       .then(function(success) {

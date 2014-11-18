@@ -4,7 +4,7 @@
  * A module wrapping the {@link Slave} client code (basically the code executed
  * by the {@link Worker} when starting up.
  *
- * @module slave/client
+ * @module slaves/client
  */
 Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'], function(promize, messages, proxy) {
 
@@ -34,65 +34,27 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
 
       send: function(message) {
 
+        /* Sanity check */
+        if (! worker) throw new Error("Worker " + workerId + " unavailable");
+
         /* Create and remember our deferred */
         var deferred = new promize.Deferred();
-        var asProxy = false;
-        var sent = false;
 
-        /* Our message-sending function */
-        function post() {
-          try {
-            if (! worker) throw new Error("Worker " + workerId + " unavailable");
-            if (sent) return;
+        /* Encode and remember this message */
+        message.id = lastMessageId ++;
+        message = messages.encode(message);
+        pendingMessages[message.id] = deferred;
 
-            /* Assign an ID, and proxy flag */
-            message.id = lastMessageId ++;
-            if (asProxy) message.makeProxy = true;
-
-            /* Encode and remember this message */
-            message = messages.encode(message);
-            pendingMessages[message.id] = deferred;
-
-            /* If debugging, debug! */
-            if (debug) {
-              console.log("Sending to Worker[" + workerId + "]\n" + JSON.stringify(message, null, 2));
-            }
-
-            /* Post the message */
-            worker.postMessage(message);
-
-          } catch (error) {
-            deferred.reject(error);
-          } finally {
-            sent = true;
-          }
+        /* If debugging, debug! */
+        if (debug) {
+          console.log("Sending to Worker[" + workerId + "]\n" + JSON.stringify(message, null, 2));
         }
 
-        post();
+        /* Post the message */
+        worker.postMessage(message);
+
+        /* Return our promise */
         return deferred.promise;
-
-        /// TODO: all this stuff has to be moved into PROXY/FUNCTION
-
-        /* Our pseudo-promise being returned */
-        return Object.freeze(Object.defineProperties(new Object(), {
-          "now": { enumerable: false, configurable: false, get: function() {
-            return this.then(function(success) { return success });
-          }},
-          "asProxy": { enumerable: true, configurable: false, value: function() {
-            if (sent) throw new Error("Message already sent");
-            asProxy = true;
-            console.log("RETURNING ON ASPROXY", this);
-            return this;
-          }},
-          "catch": { enumerable: true, configurable: false, value: function(callback) {
-            post();
-            return this.then(null, callback);
-          }},
-          "then": { enumerable: true, configurable: false, value: function(onSuccess, onFailure) {
-            post();
-            return deferred.promise.then(onSuccess, onFailure);
-          }},
-        }));
       },
 
       received: function(data) {
@@ -135,7 +97,7 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
 
       close: function() {
         if (! worker) return promize.Promise.resolve();
-        return this.send({close: true}).then(function(succcess) {
+        return this.send({close: true}).then(function(success) {
           server.terminate(new Error("Worker " + workerId + " closed"));
         });
       },

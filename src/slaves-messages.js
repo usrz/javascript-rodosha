@@ -4,7 +4,7 @@
  * A module providing utility functions for encoding and decoding messages to
  * and from a {@link Worker}.
  *
- * @module slave/messages
+ * @module slaves/messages
  */
 Esquire.define('slaves/messages', [], function messages() {
 

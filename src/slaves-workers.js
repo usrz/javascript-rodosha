@@ -3,7 +3,7 @@
 /**
  * A module dealing with browser {@link Blob}s and {@link Worker}s.
  *
- * @module slave/workers
+ * @module slaves/workers
  */
 Esquire.define('slaves/workers', ['$window'], function($window) {
 
