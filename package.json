@@ -2,9 +2,10 @@
   "name": "slave",
   "version": "0.0.0",
   "description": "USRZ Slave API",
+  "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/usrz/javascript-slave.git"
+    "url": "git://github.com/usrz/javascript-slaves.git"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
@@ -13,6 +14,7 @@
     "grunt-gh-pages": "^0.9.1",
     "grunt-jsdoc-ng": "https://github.com/usrz/javascript-grunt-jsdoc-ng/tarball/master",
     "grunt-karma": "^0.9.0",
+    "grunt-simple-mocha": "^0.4.0",
     "karma": "^0.12.24",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^0.1.5",
@@ -24,6 +26,7 @@
     "karma-verbose-reporter": "https://github.com/usrz/javascript-karma-verbose-reporter/tarball/master"
   },
   "dependencies": {
+    "esquire": "https://github.com/usrz/javascript-esquire/tarball/master",
     "promize": "https://github.com/usrz/javascript-promize/tarball/master"
   }
 }
