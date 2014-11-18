@@ -356,7 +356,7 @@
     ],
     "exceptions": [
       {
-        "description": "This method will throw an {@link Error} if the underlying\n           message requesting the call's result was already sent (if\n           {@link module:slaves/proxy.ProxyPromise#then then(...)} was\n           already called)."
+        "description": "This method will throw an <code>Error</code> if the underlying\n           message requesting the call's result was already sent (if\n           <a href=\"#!/module:slaves/proxy.ProxyPromise#then\"><code>then(...)</code></a> was\n           already called)."
       }
     ],
     "memberof": "module:slaves/proxy.ProxyPromise",
