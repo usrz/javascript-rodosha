@@ -4,10 +4,22 @@
  * A module wrapping the {@link Slave} client code (basically the code executed
  * by the {@link Worker} when starting up.
  *
- * @module slaves/client
+ * @module slaves/servers
  */
 Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'], function(promize, messages, proxy) {
 
+  /**
+   * Create a new {@link module:slaves/servers.Server Server} instance wrapping
+   * a {@link Worker}.
+   *
+   * @function module:slaves/servers.create
+   * @param {Worker} worker - The {@link Worker} to wrap.
+   * @param {string} workerId - The unique identifier of the {@link Worker} for
+   *                            logging and debugging purposes.
+   * @param {boolean} [debug] - If `true` (lots of) debugging information will
+   *                            be dumped to the console.
+   * @return {Server} The newly created {@link Server} instance.
+   */
   return Object.freeze({ create: function(worker, workerId, debug) {
 
     /* Messages ID and pending */
@@ -19,10 +31,24 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
 
     /* ---------------------------------------------------------------------- */
 
+    /**
+     * @class module:slaves/servers.Server
+     * @classdesc A wrapper for a remote {@link Worker} capable of sending
+     *            messages to it and processing received messages.
+     * @extends module:slaves.Slave
+     */
     var server = Object.freeze({
 
       worker: worker,
 
+      /**
+       * Initialize this instance.
+       *
+       * @function module:slaves.Slave#init
+       * @param {string[]} [modules] - An array of _Esquire_ module names known
+       *                               to be available in the {@link Worker}
+       * @return {module:slaves.Slave} This instance.
+       */
       init: function(modules) {
         for (var i in modules) {
           injectedModules[modules[i]] = true;
@@ -32,6 +58,13 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
 
       /* -------------------------------------------------------------------- */
 
+      /**
+       * Encode and send the specified message to the {@link Worker}.
+       *
+       * @function module:slaves.Slave#send
+       * @param {*} message - The message to be encoded and sent.
+       * @return {Promise} A {@link Promise} to the response from the response.
+       */
       send: function(message) {
 
         /* Sanity check */
@@ -57,6 +90,17 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
         return deferred.promise;
       },
 
+      /**
+       * Dencode and process the specified message received from the
+       * {@link Worker}.
+       *
+       * This method will correlate received messages with sent ones and will
+       * either resolve or reject those {@link Promise}s returned by the
+       * {@link module:slaves.Slave#send send(...)} method.
+       *
+       * @function module:slaves.Slave#receive
+       * @param {*} data - The `event.data` part of the message received.
+       */
       received: function(data) {
 
         data = messages.decode(data);

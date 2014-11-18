@@ -8,10 +8,38 @@
 Esquire.define('slaves/proxy', ['promize'], function(promize) {
 
   /**
-   *
+   * @class module:slaves/proxy.ProxyPromise
+   * @classdesc A specialized {@link Promise} returned by `function`s invoked
+   *            on **proxy** objects.
+   * @extends Promise
    */
   function ProxyPromise(message, send) {
     var promise = null;
+
+    /**
+     * Request that the object returned by the function call is stored as a
+     * **proxy** by the {@link Worker}.
+     *
+     * This instance will wait sending the method request to the remote
+     * {@link Worker} until a fulfillment or rejection handler is attached via
+     * the {@link module:slaves/proxy.ProxyPromise#then then(...)} method.
+     *
+     * @function module:slaves/proxy.ProxyPromise#asProxy
+     * @param {boolean} [proxy] If `true` (or unspecified) the object returned
+     *                          by the call will be a **proxy** object.
+     * @return {ProxyPromise} This `very` instance.
+     * @exception This method will throw an {@link Error} if the underlying
+     *            message requesting the call's result was already sent (if
+     *            {@link module:slaves/proxy.ProxyPromise#then then(...)} was
+     *            already called).
+     */
+    this.asProxy = function(proxy) {
+      /* If we haven't sent the message, request a new proxy object */
+      if (promise != null) throw new Error("Message already sent");
+      if (proxy === undefined) proxy = true;
+      if (proxy) message.makeProxy = true;
+      return this;
+    }
 
     this.then = function(onSuccess, onFailure) {
       /* Send the message if we haven't done so already */
@@ -24,14 +52,6 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
       return promise.then(onSuccess, onFailure);
     }
 
-    this.asProxy = function(proxy) {
-      /* If we haven't sent the message, request a new proxy object */
-      if (promise != null) throw new Error("Message already sent");
-      if (proxy === undefined) proxy = true;
-      if (proxy) message.makeProxy = true;
-      return this;
-    }
-
   };
 
   ProxyPromise.prototype.catch = function(onFailure) {
@@ -40,12 +60,6 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
 
   /* ======================================================================== */
 
-  /**
-   * Wrap the specified object replacing all functions with remote executors
-   * returning {@link Promise}s.
-   *
-   * @param {*} definition The definition to wrap
-   */
   function makeProxy(definition, names, send) {
     if (! names) throw new Error("No name proxying definition " + JSON.stringify(definition));
     if (! Array.isArray(names)) names = [ names ];
@@ -104,6 +118,14 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
 
   }
 
+  /**
+   * Wrap the specified **proxy** definition instrumenting all functions with
+   * remote executors returning {@link module:slaves/proxy.ProxyPromise}s.
+   *
+   * @function module:slaves/proxy.buildProxy
+   * @param {*} definition The definition to wrap
+   * @return {object} A **proxy** object to an instance from the {@link Worker}.
+   */
   function buildProxy(proxy, server) {
     var object = makeProxy(proxy.definition, [ proxy.id ], server.send);
     return Object.defineProperty(object, "$$proxyId$$", {
