@@ -1,4 +1,11 @@
 module.exports = function(grunt) {
+
+  /* Chai for simple mocha */
+  var chai = require('chai');
+  chai.config.includeStack = true;
+  global.expect = chai.expect;
+
+  /* Grunt initialization */
   grunt.initConfig({
 
     /* Unit testing */
@@ -9,6 +16,15 @@ module.exports = function(grunt) {
         singleRun: true,
         browsers: ['PhantomJS', 'Chrome', 'Firefox', 'Safari'],
         logLevel: 'ERROR'
+      }
+    },
+
+    /* Simple mocha */
+    simplemocha: {
+      'options': { slow: 500 },
+      'default': {
+        src: [ 'index.js',
+               'test/*.js' ]
       }
     },
 
@@ -70,6 +86,7 @@ module.exports = function(grunt) {
 
   /* Load our plugins */
   grunt.loadNpmTasks('grunt-karma');
+  grunt.loadNpmTasks('grunt-simple-mocha');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-jsdoc-ng');

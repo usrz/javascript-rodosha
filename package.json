@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "esquire": "https://github.com/usrz/javascript-esquire/tarball/master",
-    "promize": "https://github.com/usrz/javascript-promize/tarball/master"
+    "promize": "https://github.com/usrz/javascript-promize/tarball/master",
+    "temporary": "0.0.8"
   }
 }
