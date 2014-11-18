@@ -18,6 +18,7 @@ var slaves = require('slaves');
 slaves.create().then(function(slave) {
   // Here we have the "slave" instance...
 });
+```
 
 This basic implementation relies on _Node_'s own
 [`child_process`](http://nodejs.org/api/child_process.html)
