@@ -210,7 +210,7 @@
     "scope": "instance",
     "longname": "module:slave/messages~RemoteError#stack",
     "$href": "#stack",
-    "$id": "T000002R000074"
+    "$id": "T000002R000075"
   },
   {
     "description": "<p>A module providing utility functions for encoding and decoding messages to\nand from a <a href=\"#!/Worker\"><code>Worker</code></a>.</p>",
@@ -218,7 +218,7 @@
     "name": "slaves/messages",
     "longname": "module:slaves/messages",
     "$href": "module:slaves/messages",
-    "$id": "T000002R000075"
+    "$id": "T000002R000076"
   },
   {
     "classdesc": "<p>An <code>Error</code> received from or sent to a <a href=\"#!/Worker\"><code>Worker</code></a>.</p>",
@@ -228,7 +228,7 @@
     "scope": "inner",
     "memberof": "module:slaves/messages",
     "$href": "module:slaves/messages~RemoteError",
-    "$id": "T000002R000076"
+    "$id": "T000002R000077"
   },
   {
     "kind": "member",
@@ -243,7 +243,7 @@
     "scope": "instance",
     "longname": "module:slave/messages~RemoteError#message",
     "$href": "#message",
-    "$id": "T000002R000078"
+    "$id": "T000002R000079"
   },
   {
     "description": "<p>Encode a message prior to sending it over with <code>postMessage()</code>.</p>",
@@ -274,7 +274,7 @@
     "scope": "inner",
     "memberof": "module:slaves/messages",
     "$href": "module:slaves/messages#encode",
-    "$id": "T000002R000106"
+    "$id": "T000002R000107"
   },
   {
     "description": "<p>Decode a message after receiving it from <code>onessage()</code>.</p>",
@@ -305,7 +305,7 @@
     "scope": "inner",
     "memberof": "module:slaves/messages",
     "$href": "module:slaves/messages#decode",
-    "$id": "T000002R000120"
+    "$id": "T000002R000121"
   },
   {
     "description": "<p>A module providing a utility function to wrap remote <a href=\"#!/Worker\"><code>Worker</code></a> objects.</p>",
@@ -313,7 +313,7 @@
     "name": "slaves/proxy",
     "longname": "module:slaves/proxy",
     "$href": "module:slaves/proxy",
-    "$id": "T000002R000127"
+    "$id": "T000002R000128"
   },
   {
     "kind": "class",
@@ -326,7 +326,7 @@
     "longname": "module:slaves/proxy.ProxyPromise",
     "scope": "static",
     "$href": "module:slaves/proxy.ProxyPromise",
-    "$id": "T000002R000128"
+    "$id": "T000002R000129"
   },
   {
     "description": "<p>Request that the object returned by the function call is stored as a\n<strong>proxy</strong> by the <a href=\"#!/Worker\"><code>Worker</code></a>.</p>\n<p>This instance will wait sending the method request to the remote\n<a href=\"#!/Worker\"><code>Worker</code></a> until a fulfillment or rejection handler is attached via\nthe <a href=\"#!/module:slaves/proxy.ProxyPromise#then\"><code>then(...)</code></a> method.</p>",
@@ -356,14 +356,14 @@
     ],
     "exceptions": [
       {
-        "description": "This method will throw an <code>Error</code> if the underlying\n           message requesting the call's result was already sent (if\n           <a href=\"#!/module:slaves/proxy.ProxyPromise#then\"><code>then(...)</code></a> was\n           already called)."
+        "description": "This method will throw an {@link Error} if the underlying\n           message requesting the call's result was already sent (if\n           {@link module:slaves/proxy.ProxyPromise#then then(...)} was\n           already called)."
       }
     ],
     "memberof": "module:slaves/proxy.ProxyPromise",
     "longname": "module:slaves/proxy.ProxyPromise#asProxy",
     "scope": "instance",
     "$href": "module:slaves/proxy.ProxyPromise#asProxy",
-    "$id": "T000002R000131"
+    "$id": "T000002R000132"
   },
   {
     "description": "<p>Wrap the specified <strong>proxy</strong> definition instrumenting all functions with\nremote executors returning <a href=\"#!/module:slaves/proxy.ProxyPromise\"><code>module:slaves/proxy.ProxyPromise</code></a>s.</p>",
@@ -394,7 +394,7 @@
     "longname": "module:slaves/proxy.buildProxy",
     "scope": "static",
     "$href": "module:slaves/proxy#buildProxy",
-    "$id": "T000002R000165"
+    "$id": "T000002R000166"
   },
   {
     "description": "<p>Create a new <a href=\"#!/module:slaves/servers.Server\"><code>Server</code></a> instance wrapping\na <a href=\"#!/Worker\"><code>Worker</code></a>.</p>",
@@ -444,7 +444,7 @@
     "longname": "module:slaves/servers.create",
     "scope": "static",
     "$href": "module:slaves/servers#create",
-    "$id": "T000002R000172"
+    "$id": "T000002R000173"
   },
   {
     "description": "<p>A module wrapping the <a href=\"#!/#Slave\"><code>Slave</code></a> client code (basically the code executed\nby the <a href=\"#!/Worker\"><code>Worker</code></a> when starting up.</p>",
@@ -452,7 +452,7 @@
     "name": "slaves/servers",
     "longname": "module:slaves/servers",
     "$href": "module:slaves/servers",
-    "$id": "T000002R000173"
+    "$id": "T000002R000174"
   },
   {
     "kind": "class",
@@ -465,7 +465,7 @@
     "longname": "module:slaves/servers.Server",
     "scope": "static",
     "$href": "module:slaves/servers.Server",
-    "$id": "T000002R000178"
+    "$id": "T000002R000179"
   },
   {
     "description": "<p>Initialize this instance.</p>",
@@ -497,7 +497,7 @@
     "longname": "module:slaves.Slave#init",
     "scope": "instance",
     "$href": "module:slaves.Slave#init",
-    "$id": "T000002R000181"
+    "$id": "T000002R000182"
   },
   {
     "description": "<p>Encode and send the specified message to the <a href=\"#!/Worker\"><code>Worker</code></a>.</p>",
@@ -528,7 +528,7 @@
     "longname": "module:slaves.Slave#send",
     "scope": "instance",
     "$href": "module:slaves.Slave#send",
-    "$id": "T000002R000185"
+    "$id": "T000002R000186"
   },
   {
     "description": "<p>Dencode and process the specified message received from the\n<a href=\"#!/Worker\"><code>Worker</code></a>.</p>\n<p>This method will correlate received messages with sent ones and will\neither resolve or reject those <a href=\"#!/Promise\"><code>Promise</code></a>s returned by the\n<a href=\"#!/module:slaves.Slave#send\"><code>send(...)</code></a> method.</p>",
@@ -549,7 +549,7 @@
     "longname": "module:slaves.Slave#receive",
     "scope": "instance",
     "$href": "module:slaves.Slave#receive",
-    "$id": "T000002R000191"
+    "$id": "T000002R000192"
   },
   {
     "description": "<p>A module dealing with browser <code>Blob</code>s and <a href=\"#!/Worker\"><code>Worker</code></a>s.</p>",
@@ -557,7 +557,7 @@
     "name": "slaves/workers",
     "longname": "module:slaves/workers",
     "$href": "module:slaves/workers",
-    "$id": "T000002R000225"
+    "$id": "T000002R000226"
   },
   {
     "description": "<p>Create a new <code>Blob</code> instance from a <code>string</code> or an array.</p>",
@@ -594,7 +594,7 @@
     "scope": "inner",
     "memberof": "module:slaves/workers",
     "$href": "module:slaves/workers#makeBlob",
-    "$id": "T000002R000227"
+    "$id": "T000002R000228"
   },
   {
     "description": "<p>Create a <code>string</code> <strong>URL</strong> for the specified <code>Blob</code> (or content).</p>",
@@ -632,7 +632,7 @@
     "scope": "inner",
     "memberof": "module:slaves/workers",
     "$href": "module:slaves/workers#makeURL",
-    "$id": "T000002R000235"
+    "$id": "T000002R000236"
   },
   {
     "description": "<p>Create a <a href=\"#!/Worker\"><code>Worker</code></a> for the specified <code>Blob</code>, URL or content.</p>",
@@ -670,7 +670,7 @@
     "scope": "inner",
     "memberof": "module:slaves/workers",
     "$href": "module:slaves/workers#makeWorker",
-    "$id": "T000002R000237"
+    "$id": "T000002R000238"
   },
   {
     "description": "<p>Create a new <a href=\"#!/#Slave\"><code>Slave</code></a> instance.</p>",
@@ -702,7 +702,7 @@
     "longname": "module:slaves.create",
     "scope": "static",
     "$href": "module:slaves#create",
-    "$id": "T000002R000242"
+    "$id": "T000002R000243"
   },
   {
     "description": "<p>The main entry point for operating with <a href=\"#!/Worker\"><code>Worker</code></a>s and <a href=\"#!/#Slave\"><code>Slave</code></a>s.</p>",
@@ -710,7 +710,7 @@
     "name": "slaves",
     "longname": "module:slaves",
     "$href": "module:slaves",
-    "$id": "T000002R000243"
+    "$id": "T000002R000244"
   },
   {
     "kind": "class",
@@ -720,7 +720,7 @@
     "scope": "static",
     "longname": "module:slaves.Slave",
     "$href": "module:slaves.Slave",
-    "$id": "T000002R000255"
+    "$id": "T000002R000256"
   },
   {
     "description": "<p>Import one or more <em>Esquire</em> modules in the <a href=\"#!/Worker\"><code>Worker</code></a>.</p>\n<p>If a module was already defined in the <a href=\"#!/Worker\"><code>Worker</code></a>, this method\nwill ignore it.</p>",
@@ -762,7 +762,7 @@
     "longname": "module:slaves.Slave#import",
     "scope": "instance",
     "$href": "module:slaves.Slave#import",
-    "$id": "T000002R000257"
+    "$id": "T000002R000258"
   },
   {
     "description": "<p>Create a <strong>proxy</strong> object for an <em>Esquire</em> module defined in the\n<a href=\"#!/Worker\"><code>Worker</code></a>.</p>",
@@ -793,7 +793,7 @@
     "longname": "module:slaves.Slave#proxy",
     "scope": "instance",
     "$href": "module:slaves.Slave#proxy",
-    "$id": "T000002R000259"
+    "$id": "T000002R000260"
   },
   {
     "description": "<p>Destroy the specified <strong>proxy</strong> object, releasing its instance in the\n<a href=\"#!/Worker\"><code>Worker</code></a>'s scope.</p>",
@@ -824,7 +824,7 @@
     "longname": "module:slaves.Slave#destroy",
     "scope": "instance",
     "$href": "module:slaves.Slave#destroy",
-    "$id": "T000002R000261"
+    "$id": "T000002R000262"
   },
   {
     "description": "<p>Gracefully close the underlying <a href=\"#!/Worker\"><code>Worker</code></a>, allowing queued\nmessages to be processed.</p>",
@@ -844,7 +844,7 @@
     "longname": "module:slaves.Slave#close",
     "scope": "instance",
     "$href": "module:slaves.Slave#close",
-    "$id": "T000002R000263"
+    "$id": "T000002R000264"
   },
   {
     "description": "<p>Immediately terminate the underlying <a href=\"#!/Worker\"><code>Worker</code></a>, forcing all\npending messages to be discarded and unresolved <a href=\"#!/Promise\"><code>Promise</code></a>s to be\nrejected.</p>",
@@ -854,7 +854,7 @@
     "longname": "module:slaves.Slave#terminate",
     "scope": "instance",
     "$href": "module:slaves.Slave#terminate",
-    "$id": "T000002R000265"
+    "$id": "T000002R000266"
   },
   {
     "description": "<p>Appends fulfillment and rejection handlers to this <a href=\"#!/Promise\"><code>Promise</code></a>, and\nreturns a <strong>new</strong> promise resolving to the return value of the called\nhandler.</p>",
@@ -898,7 +898,7 @@
     "inherits": "Promise#then",
     "inherited": true,
     "$href": "module:slaves/proxy.ProxyPromise#then",
-    "$id": "T000002R000270"
+    "$id": "T000002R000271"
   },
   {
     "description": "<p>Appends a rejection handler to this <a href=\"#!/Promise\"><code>Promise</code></a>, and returns a\n<strong>new</strong> promise resolving to the return value of the called handler.</p>\n<p>This is equivalent to calling <code>then(null, onFailure)</code>.</p>",
@@ -932,7 +932,7 @@
     "inherits": "Promise#catch",
     "inherited": true,
     "$href": "module:slaves/proxy.ProxyPromise#catch",
-    "$id": "T000002R000271"
+    "$id": "T000002R000272"
   },
   {
     "description": "<p>Initialize this instance.</p>",
@@ -966,7 +966,7 @@
     "inherits": "module:slaves.Slave#init",
     "inherited": true,
     "$href": "module:slaves/servers.Server#init",
-    "$id": "T000002R000272"
+    "$id": "T000002R000273"
   },
   {
     "description": "<p>Encode and send the specified message to the <a href=\"#!/Worker\"><code>Worker</code></a>.</p>",
@@ -999,7 +999,7 @@
     "inherits": "module:slaves.Slave#send",
     "inherited": true,
     "$href": "module:slaves/servers.Server#send",
-    "$id": "T000002R000273"
+    "$id": "T000002R000274"
   },
   {
     "description": "<p>Dencode and process the specified message received from the\n<a href=\"#!/Worker\"><code>Worker</code></a>.</p>\n<p>This method will correlate received messages with sent ones and will\neither resolve or reject those <a href=\"#!/Promise\"><code>Promise</code></a>s returned by the\n<a href=\"#!/module:slaves.Slave#send\"><code>send(...)</code></a> method.</p>",
@@ -1022,7 +1022,7 @@
     "inherits": "module:slaves.Slave#receive",
     "inherited": true,
     "$href": "module:slaves/servers.Server#receive",
-    "$id": "T000002R000274"
+    "$id": "T000002R000275"
   },
   {
     "description": "<p>Import one or more <em>Esquire</em> modules in the <a href=\"#!/Worker\"><code>Worker</code></a>.</p>\n<p>If a module was already defined in the <a href=\"#!/Worker\"><code>Worker</code></a>, this method\nwill ignore it.</p>",
@@ -1066,7 +1066,7 @@
     "inherits": "module:slaves.Slave#import",
     "inherited": true,
     "$href": "module:slaves/servers.Server#import",
-    "$id": "T000002R000275"
+    "$id": "T000002R000276"
   },
   {
     "description": "<p>Create a <strong>proxy</strong> object for an <em>Esquire</em> module defined in the\n<a href=\"#!/Worker\"><code>Worker</code></a>.</p>",
@@ -1099,7 +1099,7 @@
     "inherits": "module:slaves.Slave#proxy",
     "inherited": true,
     "$href": "module:slaves/servers.Server#proxy",
-    "$id": "T000002R000276"
+    "$id": "T000002R000277"
   },
   {
     "description": "<p>Destroy the specified <strong>proxy</strong> object, releasing its instance in the\n<a href=\"#!/Worker\"><code>Worker</code></a>'s scope.</p>",
@@ -1132,7 +1132,7 @@
     "inherits": "module:slaves.Slave#destroy",
     "inherited": true,
     "$href": "module:slaves/servers.Server#destroy",
-    "$id": "T000002R000277"
+    "$id": "T000002R000278"
   },
   {
     "description": "<p>Gracefully close the underlying <a href=\"#!/Worker\"><code>Worker</code></a>, allowing queued\nmessages to be processed.</p>",
@@ -1154,7 +1154,7 @@
     "inherits": "module:slaves.Slave#close",
     "inherited": true,
     "$href": "module:slaves/servers.Server#close",
-    "$id": "T000002R000278"
+    "$id": "T000002R000279"
   },
   {
     "description": "<p>Immediately terminate the underlying <a href=\"#!/Worker\"><code>Worker</code></a>, forcing all\npending messages to be discarded and unresolved <a href=\"#!/Promise\"><code>Promise</code></a>s to be\nrejected.</p>",
@@ -1166,6 +1166,6 @@
     "inherits": "module:slaves.Slave#terminate",
     "inherited": true,
     "$href": "module:slaves/servers.Server#terminate",
-    "$id": "T000002R000279"
+    "$id": "T000002R000280"
   }
 ]);})();
