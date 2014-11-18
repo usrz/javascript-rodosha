@@ -2,7 +2,7 @@ USRZ Slaves API
 ===============
 
 <div class="nojsdoc">
-  <p>It also works in <a href="NODE.md">Node.JS</a></p>
+  <p><strong>It also works in <a href="NODE.md">Node.JS</a>.</strong></p>
 </div>
 
 Slaves are an easier way to deal with multi-threading in the browser by using
