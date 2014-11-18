@@ -63,7 +63,6 @@ module.exports = function(grunt) {
           "templates": {
             "cleverLinks":    true,
             "monospaceLinks": true,
-            "windowTitle": "Slaves API",
             "minify": false
           },
           "markdown": {
