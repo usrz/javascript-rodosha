@@ -92,7 +92,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-gh-pages');
 
   /* Default tasks */
-  grunt.registerTask('default', ['karma', 'simplemocha', 'concat', 'uglify']);
+  grunt.registerTask('default', ['test', 'concat', 'uglify']);
+  grunt.registerTask('test', ['karma', 'simplemocha']);
   grunt.registerTask('docs', ['jsdoc-ng', 'gh-pages']);
 
 };
