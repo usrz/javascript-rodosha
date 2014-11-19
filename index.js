@@ -22,43 +22,49 @@ process.on('exit', function() {
   });
 });
 
-/* Pollute Esquire's global namespace */
-var $global = esquire('$global');
+/* Emulate a web worker */
+Esquire.define("$global/Worker", [], function() {
+  return function Worker(uri) {
+    var child = childProcess.fork(uri);
+    var worker = this;
 
-$global.document = {}; // to make tests work!
+    child.on('message', function(message) {
+      if (worker.onmessage) {
+        worker.onmessage({ data: message });
+      } else {
+        console.warn("Server: no message listener");
+      }
+    });
 
-$global.Worker = function(uri) {
-  var child = childProcess.fork(uri);
-  var worker = this;
+    this.postMessage = function(message) { child.send(message) };
+    this.terminate   = function()        { child.kill() };
+  }
+});
 
-  child.on('message', function(message) {
-    if (worker.onmessage) {
-      worker.onmessage({ data: message });
-    } else {
-      console.warn("Server: no message listener");
+/* Emulate a blob */
+Esquire.define("$global/Blob", [], function() {
+  return function Blob(data) {
+    if (data instanceof Array) data = data.join('');
+    this.$$data$$ = data;
+  }
+});
+
+/* Emulate the URL.createObjectURL call */
+Esquire.define("$global/URL", ["$global/Blob"], function(Blob) {
+  return Object.freeze({
+    createObjectURL: function(blob) {
+      if (blob instanceof Blob) {
+        var file = new TmpFile();
+        tempFiles.push(file);
+        var script = "require('" + joinPath(__dirname, "worker.js") + "');\n"
+                   + "(function(){" + blob.$$data$$ + "})();\n";
+        file.writeFileSync(script, 'utf8');
+        return file.path;
+      } else {
+        throw new Error("Only (fake) Blob(s) supported: ", blob);
+      }
     }
   });
-
-  this.postMessage = function(message) { child.send(message) };
-  this.terminate   = function()        { child.kill() };
-}
-
-$global.Blob = function(data) {
-  if (data instanceof Array) data = data.join('');
-  this.$$data$$ = data;
-};
-
-$global.URL = { createObjectURL: function(blob) {
-  if (blob instanceof $global.Blob) {
-    var file = new TmpFile();
-    tempFiles.push(file);
-    var script = "require('" + joinPath(__dirname, "worker.js") + "');\n"
-               + "(function(){" + blob.$$data$$ + "})();\n";
-    file.writeFileSync(script, 'utf8');
-    return file.path;
-  } else {
-    throw new Error("Only (fake) Blob(s) supported: ", blob);
-  }
-}};
+});
 
 module.exports = esquire('slaves');
