@@ -1,11 +1,12 @@
 'use strict';
 
-esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire, slaves, promize, messages) {
+esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], function($esquire, slaves, promize, messages, $global) {
 
+  /* Run tests on Node */
+  if (!('document' in $global)) $global.document = "fake";
+
+  /* Debug flag */
   var debug = false;
-  var itx = function() {
-    return (debug ? it.skip : it).apply(null, arguments);
-  }
 
   Esquire.define("module_a", function() { return "a-value"});
 
@@ -490,7 +491,8 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages'], function($esquire,
 
     /* ---------------------------------------------------------------------- */
 
-    /* Simple timings for a number of messages */
+    /* Simple timings for a number of messages (skip on debug) */
+    var itx = function() { return (debug ? it.skip : it).apply(null, arguments) }
     itx("should validate performance", function(done) {
 
       var start = new Date().getTime();
