@@ -45,7 +45,8 @@ Esquire.define('slaves/messages', [], function messages() {
       }});
     }
   }
-  RemoteError.prototype = new Error;
+  RemoteError.prototype = Object.create(Error.prototype);
+  RemoteError.prototype.constructor = RemoteError;
   RemoteError.prototype.name = 'RemoteError';
 
   /* ======================================================================== */
@@ -100,6 +101,9 @@ Esquire.define('slaves/messages', [], function messages() {
 
     if (type === 'object') {
 
+      if (decoded instanceof ArrayBuffer) return decoded;
+      if (decoded.buffer instanceof ArrayBuffer) return decoded;
+
       /* Normal arrays */
       if (Array.isArray(decoded)) {
         return copy(decoded, [], stack, encode);
@@ -149,6 +153,9 @@ Esquire.define('slaves/messages', [], function messages() {
     if (type === 'string') return encoded;
 
     if (type === 'object') {
+
+      if (encoded instanceof ArrayBuffer) return encoded;
+      if (encoded.buffer instanceof ArrayBuffer) return encoded;
 
       if (Array.isArray(encoded)) {
         return copy(encoded, [], stack, decode);
