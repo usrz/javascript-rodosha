@@ -6,7 +6,8 @@
  *
  * @module slaves/servers
  */
-Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'], function(promize, messages, proxy) {
+Esquire.define('slaves/servers', ['promize/Promise', 'promize/Deferred' ,'slaves/messages' ,'slaves/proxy'],
+function(Promise, Deferred, messages, proxy) {
 
   /**
    * Create a new {@link module:slaves/servers.Server Server} instance wrapping
@@ -71,7 +72,7 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
         if (! worker) throw new Error("Worker " + workerId + " unavailable");
 
         /* Create and remember our deferred */
-        var deferred = new promize.Deferred();
+        var deferred = new Deferred();
 
         /* Encode and remember this message */
         message.id = lastMessageId ++;
@@ -140,7 +141,7 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
       /* -------------------------------------------------------------------- */
 
       close: function() {
-        if (! worker) return promize.Promise.resolve();
+        if (! worker) return Promise.resolve();
         return this.send({close: true}).then(function(success) {
           server.terminate(new Error("Worker " + workerId + " closed"));
         });
@@ -201,7 +202,7 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
           );
         }
 
-        return promize.Promise.all(promises);
+        return Promise.all(promises);
       },
 
       proxy: function(module) {

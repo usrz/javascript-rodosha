@@ -1,6 +1,7 @@
 'use strict';
 
-esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], function($esquire, slaves, promize, messages, $global) {
+esquire(['$esquire', 'slaves', 'promize/Promise', 'promize/Deferred', 'slaves/messages', '$global'],
+function($esquire, slaves, Promise, Deferred, messages, $global) {
 
   /* Run tests on Node */
   if (!('document' in $global)) $global.document = "fake";
@@ -20,7 +21,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], functio
     }
   });
 
-  Esquire.define("module_c", ["module_a", "module_b", "promize", "$global"], function(a, b, promize, $global) {
+  Esquire.define("module_c", ["module_a", "module_b", "promize/Deferred", "$global"], function(a, b, Deferred, $global) {
     var array = [];
     return {
       prp_a: a,
@@ -60,14 +61,14 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], functio
         throw new Error("This will always throw something");
       },
       fnc_h: function(success) {
-        var deferred = new promize.Deferred();
+        var deferred = new Deferred();
         $global.setTimeout(function() {
           deferred.resolve(success);
         }, 100);
         return deferred.promise;
       },
       fnc_i: function(failure) {
-        var deferred = new promize.Deferred();
+        var deferred = new Deferred();
         $global.setTimeout(function() {
           deferred.reject(new Error(failure));
         }, 100);
@@ -188,7 +189,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], functio
         expect(d_f.then).to.be.a('function');
         expect(e.then).to.be.a('function');
 
-        return promize.Promise.all([a, b, c, d_p, d_f, e]);
+        return Promise.all([a, b, c, d_p, d_f, e]);
       })
 
       .then(function(success) {
@@ -236,7 +237,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], functio
         expect(result).to.be.a('object');
         expect(result.$$proxyId$$, "result.$$proxyId$$").exist;
         expect(result.$$proxyId$$).to.not.equal(openProxy.$$proxyId$$);
-        return promize.Promise.all([openProxy.obj_d.fnc('foo'), result.fnc('bar')]);
+        return Promise.all([openProxy.obj_d.fnc('foo'), result.fnc('bar')]);
       })
 
       .then(function(success) {
@@ -275,7 +276,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], functio
 
       .then(function(proxy) {
         rproxy = proxy;
-        return promize.Promise.all([
+        return Promise.all([
           proxy.arr_e,
           proxy.fnc_f(random),
         ]);
@@ -338,7 +339,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], functio
         expect(prpPromise.then).to.be.a('function');
         expect(fncPromise.then).to.be.a('function');
 
-        return promize.Promise.all([oldPromise, prpPromise, fncPromise]);
+        return Promise.all([oldPromise, prpPromise, fncPromise]);
       })
 
       .then(function(success) {
@@ -524,7 +525,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], functio
         now = new Date().getTime();
         console.log("Created " + promises.length + " messages in " + (now - start) + " ms");
 
-        var promise = promize.Promise.all(promises);
+        var promise = Promise.all(promises);
         start = new Date().getTime();
         return promise;
       })
@@ -571,7 +572,7 @@ esquire(['$esquire', 'slaves', 'promize', 'slaves/messages', '$global'], functio
         openProxy = proxy;
         var resultPromise = proxy().then(); // make sure message gets sent ...
         var closePromise = openSlave.close(); // ... before slave is closed!
-        return promize.Promise.all([resultPromise, closePromise]);
+        return Promise.all([resultPromise, closePromise]);
       })
 
       .then(function(result) {

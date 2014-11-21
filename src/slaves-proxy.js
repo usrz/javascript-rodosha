@@ -5,7 +5,7 @@
  *
  * @module slaves/proxy
  */
-Esquire.define('slaves/proxy', ['promize'], function(promize) {
+Esquire.define('slaves/proxy', ['promize/Promise'], function(Promise) {
 
   /**
    * @class module:slaves/proxy.ProxyPromise
@@ -46,7 +46,7 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
       try {
         if (promise == null) promise = send(message);
       } catch (error) {
-        promise = promize.Promise.reject(error);
+        promise = Promise.reject(error);
       }
       /* Set up the promise's handlers */
       return promise.then(onSuccess, onFailure);

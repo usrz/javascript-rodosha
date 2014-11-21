@@ -5,7 +5,7 @@
  *
  * @module slaves
  */
-Esquire.define('slaves', [ 'promize', 'slaves/servers', 'slaves/workers' ], function(promize, servers, workers) {
+Esquire.define('slaves', [ 'promize/Deferred', 'slaves/servers', 'slaves/workers' ], function(Deferred, servers, workers) {
 
   /**
    * Create a new {@link Slave} instance.
@@ -21,7 +21,7 @@ Esquire.define('slaves', [ 'promize', 'slaves/servers', 'slaves/workers' ], func
     while (workerId.length < 8) workerId = '0' + workerId;
 
     /* Our deferred for initialization */
-    var initialized = new promize.Deferred();
+    var initialized = new Deferred();
 
     /* Create our Blob URL */
     var script = [];
