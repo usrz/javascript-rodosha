@@ -1,93 +1,14 @@
 (function() {
-/** @typedef {module:slaves.Slave} Slave */
-
-/* ========================================================================== */
-
-/**
- * @protected
- * @class Promise
- * @classdesc The {@link Promise} interface is used for deferred and
- * asynchronous computations.
- */
-
-/**
- * Appends fulfillment and rejection handlers to this {@link Promise}, and
- * returns a **new** promise resolving to the return value of the called
- * handler.
- *
- * @param {function} [onSuccess] - The handler to call when this
- *        {@link Promise} has been successfully resolved.
- * @param {function} [onFailure] - The handler to call when this
- *        {@link Promise} has been rejected.
- * @returns {Promise} A new {@link Promise} resolving to the return value
- *          of the called handler
- * @instance
- * @function Promise#then
- */
-
-/**
- * Appends a rejection handler to this {@link Promise}, and returns a
- * **new** promise resolving to the return value of the called handler.
- *
- * This is equivalent to calling `then(null, onFailure)`.
- *
- * @param {function} [onFailure] - The handler to call when this
- *        {@link Promise} has been rejected.
- * @returns {Promise} A new {@link Promise} resolving to the return value
- *          of the called handler
- * @instance
- * @function Promise#catch
- */
-
-/**
- * @protected
- * @class Worker
- * @classdesc The {@link Worker} interface represents a background task (it
- * spawns real OS-level threads) that can be easily created and can send
- * messages back to their creators.
- */
-
-/**
- * An event listener that is called whenever an error bubbles through the
- * {@link Worker}.
- *
- * @member Worker#onerror
- * @type function
- */
-
-/**
- * An event listener that is called whenever a message bubbles through the
- * {@link Worker}. The message is stored in the event's `data` property.
- * {@link Worker}.
- *
- * @member Worker#onerror
- * @type function
- */
-
-/**
- * Sends a message, that is any JavaScript object to the worker's inner scope.
- *
- * @function Worker#postMessage
- * @param {*} message - The message to send to the worker.
- */
-
-/**
- *
- * Immediately terminates the worker. This does not offer the worker an
- * opportunity to finish its operations; it is simply stopped at once.
- *
- * @function Worker#terminate
- */
-;
 'use strict';
 
 /**
- * A module wrapping the {@link Slave} client code (basically the code executed
- * by the {@link Worker} in order to process messages from the {@link Server}).
+ * A module wrapping the {@link Rodosha} client code (basically the code
+ * executed by the {@link Worker} in order to process and respond to messages
+ * from the {@link Server}).
  *
- * @module slaves/client
+ * @module rodosha/client
  */
-Esquire.define('slaves/client', ['$global', '$esquire', 'slaves/messages'], function($global, $esquire, messages) {
+Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], function($global, $esquire, messages) {
 
   /* ======================================================================== */
   /* OBJECT PROXIES                                                           */
@@ -185,7 +106,7 @@ Esquire.define('slaves/client', ['$global', '$esquire', 'slaves/messages'], func
   /**
    * Initialize the {@link Worker} side.
    *
-   * @function module:slaves/client.init
+   * @function module:rodosha/client.init
    * @param {boolean} [debug] - If `true` debug messages will be sent over and
    *                            logged on the {@link Server}'s console.
    */
@@ -286,15 +207,232 @@ Esquire.define('slaves/client', ['$global', '$esquire', 'slaves/messages'], func
 
 });
 ;
+/** @typedef {module:rodosha.Rodosha} Rodosha */
+
+/* ========================================================================== */
+
+/**
+ * @protected
+ * @class Promise
+ * @classdesc The {@link Promise} interface is used for deferred and
+ * asynchronous computations.
+ */
+
+/**
+ * Appends fulfillment and rejection handlers to this {@link Promise}, and
+ * returns a **new** promise resolving to the return value of the called
+ * handler.
+ *
+ * @param {function} [onSuccess] - The handler to call when this
+ *        {@link Promise} has been successfully resolved.
+ * @param {function} [onFailure] - The handler to call when this
+ *        {@link Promise} has been rejected.
+ * @returns {Promise} A new {@link Promise} resolving to the return value
+ *          of the called handler
+ * @instance
+ * @function Promise#then
+ */
+
+/**
+ * Appends a rejection handler to this {@link Promise}, and returns a
+ * **new** promise resolving to the return value of the called handler.
+ *
+ * This is equivalent to calling `then(null, onFailure)`.
+ *
+ * @param {function} [onFailure] - The handler to call when this
+ *        {@link Promise} has been rejected.
+ * @returns {Promise} A new {@link Promise} resolving to the return value
+ *          of the called handler
+ * @instance
+ * @function Promise#catch
+ */
+
+/**
+ * @protected
+ * @class Worker
+ * @classdesc The {@link Worker} interface represents a background task (it
+ * spawns real OS-level threads) that can be easily created and can send
+ * messages back to their creators.
+ */
+
+/**
+ * An event listener that is called whenever an error bubbles through the
+ * {@link Worker}.
+ *
+ * @member Worker#onerror
+ * @type function
+ */
+
+/**
+ * An event listener that is called whenever a message bubbles through the
+ * {@link Worker}. The message is stored in the event's `data` property.
+ * {@link Worker}.
+ *
+ * @member Worker#onerror
+ * @type function
+ */
+
+/**
+ * Sends a message, that is any JavaScript object to the worker's inner scope.
+ *
+ * @function Worker#postMessage
+ * @param {*} message - The message to send to the worker.
+ */
+
+/**
+ *
+ * Immediately terminates the worker. This does not offer the worker an
+ * opportunity to finish its operations; it is simply stopped at once.
+ *
+ * @function Worker#terminate
+ */
+;
+'use strict';
+
+/**
+ * The main entry point for operating with {@link Worker}s and {@link Rodosha}s.
+ *
+ * @module rodosha
+ */
+Esquire.define('rodosha', [ 'promize/Deferred', 'rodosha/servers', 'rodosha/workers' ], function(Deferred, servers, workers) {
+
+  /**
+   * Create a new {@link Rodosha} instance.
+   *
+   * @function module:rodosha.create
+   * @param {boolean} [debug] - If `true` (lots of) debugging information will
+   *                            be dumped to the console.
+   * @return {Promise} A {@link Promise} for a {@link Rodosha} instance.
+   */
+  return Object.freeze({ create: function(debug) {
+
+    var workerId = Math.floor(Math.random() * 0x0100000000).toString(16);
+    while (workerId.length < 8) workerId = '0' + workerId;
+
+    /* Our deferred for initialization */
+    var initialized = new Deferred();
+
+    /* Create our Blob URL */
+    var script = [];
+    script.push("(" + Esquire.$$script + ")(self);\n");
+    script.push(Esquire.module("rodosha/messages").$$script + ";\n");
+    script.push(Esquire.module("rodosha/client").$$script + ";\n");
+    script.push("new Esquire().require('rodosha/client').init(" + debug + ");\n");
+
+    /* Dump our code for debugging */
+    if (debug) {
+      var debugScript = script.join('').split('\n');
+      for (var i in debugScript) {
+        var line = new Number(i) + 1;
+        line = line < 10 ? '  ' + line + ' - ':
+               line < 100 ? ' ' + line + ' - ' :
+               line + ' - ';
+        debugScript[i] = line + debugScript[i];
+      }
+      console.log("Worker[" + workerId + "] Script\n" + debugScript.join('\n'));
+    }
+
+    /* ---------------------------------------------------------------------- */
+
+    /* Create worker and wrap it into a server */
+    var server = servers.create(workers.makeWorker(script), workerId, debug);
+
+    /**
+     * @class Rodosha
+     * @memberof module:rodosha
+     * @classdesc A {@link Rodosha} instance wraps a web {@link Worker} and
+     *            simplifies its interaction throgh the use of proxy objects.
+     */
+    var rodosha = Object.freeze({
+      /**
+       * Import one or more _Esquire_ modules in the {@link Worker}.
+       *
+       * If a module was already defined in the {@link Worker}, this method
+       * will ignore it.
+       *
+       * @function module:rodosha.Rodosha#import
+       * @param {string|string[]} modules - A list of module names, as a
+       *                                    string or an array of strings.
+       * @param {string} [...] - Mode module names to import as arguments.
+       * @return {Promise} A promise to an array of modules actually imported.
+       */
+      'import':    function() { return server['import'   ].apply(server, arguments) },
+
+      /**
+       * Create a **proxy** object for an _Esquire_ module defined in the
+       * {@link Worker}.
+       *
+       * @function module:rodosha.Rodosha#proxy
+       * @param {string} module - The name of the module to create a proxy for.
+       * @return {Promise} A promise to the proxy object.
+       */
+      'proxy':     function() { return server['proxy'    ].apply(server, arguments) },
+
+      /**
+       * Destroy the specified **proxy** object, releasing its instance in the
+       * {@link Worker}'s scope.
+       *
+       * @function module:rodosha.Rodosha#destroy
+       * @param {object} proxy - The proxy module to destroy.
+       * @return {Promise} A promise to the completion of the operation.
+       */
+      'destroy':   function() { return server['destroy'  ].apply(server, arguments) },
+
+      /**
+       * Gracefully close the underlying {@link Worker}, allowing queued
+       * messages to be processed.
+       *
+       * @function module:rodosha.Rodosha#close
+       * @return {Promise} A promise to the completion of the operation.
+       */
+      'close':     function() { return server['close'    ].apply(server, arguments) },
+
+      /**
+       * Immediately terminate the underlying {@link Worker}, forcing all
+       * pending messages to be discarded and unresolved {@link Promise}s to be
+       * rejected.
+       *
+       * @function module:rodosha.Rodosha#terminate
+       */
+      'terminate': function() { return server['terminate'].apply(server, arguments) },
+    });
+
+    /* Error handler */
+    server.worker.onerror = function(event) {
+      console.error("Worker[" + workerId + "] Uncaught exception", event.data);
+      initialized.reject(event);
+    }
+
+    /* Message handler */
+    server.worker.onmessage = function(event) {
+
+      if ('initialized' in event.data) {
+        server.init(event.data.initialized);
+        initialized.resolve(rodosha);
+      } else try {
+        server.received(event.data);
+      } catch (error) {
+        console.error("Worker[" + workerId + "] Exception processing message", event.data, error);
+        console.error(error.stack);
+      }
+    }
+
+    /* Return our promise */
+    return initialized.promise;
+
+  }});
+
+});
+;
 'use strict';
 
 /**
  * A module providing utility functions for encoding and decoding messages to
  * and from a {@link Worker}.
  *
- * @module slaves/messages
+ * @module rodosha/messages
  */
-Esquire.define('slaves/messages', [], function messages() {
+Esquire.define('rodosha/messages', [], function messages() {
 
   /**
    * @classdesc An {@link Error} received from or sent to a {@link Worker}.
@@ -303,7 +441,7 @@ Esquire.define('slaves/messages', [], function messages() {
   function RemoteError(error) {
     /**
      * @member {string} message A message detailing the error.
-     * @memberof module:slave/messages~RemoteError
+     * @memberof module:rodosha/messages~RemoteError
      * @instance
      */
     var message = error.message || "Unknown error";
@@ -320,7 +458,7 @@ Esquire.define('slaves/messages', [], function messages() {
     /**
      * @member {string} stack The stack trace associated with this instance,
      *                        combining both local and remote details.
-     * @memberof module:slave/messages~RemoteError
+     * @memberof module:rodosha/messages~RemoteError
      * @instance
      */
     var localStack = this.stack || new Error().stack;
@@ -481,12 +619,12 @@ Esquire.define('slaves/messages', [], function messages() {
 /**
  * A module providing a utility function to wrap remote {@link Worker} objects.
  *
- * @module slaves/proxy
+ * @module rodosha/proxy
  */
-Esquire.define('slaves/proxy', ['promize/Promise'], function(Promise) {
+Esquire.define('rodosha/proxy', ['promize/Promise'], function(Promise) {
 
   /**
-   * @class module:slaves/proxy.ProxyPromise
+   * @class module:rodosha/proxy.ProxyPromise
    * @classdesc A specialized {@link Promise} returned by `function`s invoked
    *            on **proxy** objects.
    * @extends Promise
@@ -500,15 +638,15 @@ Esquire.define('slaves/proxy', ['promize/Promise'], function(Promise) {
      *
      * This instance will wait sending the method request to the remote
      * {@link Worker} until a fulfillment or rejection handler is attached via
-     * the {@link module:slaves/proxy.ProxyPromise#then then(...)} method.
+     * the {@link module:rodosha/proxy.ProxyPromise#then then(...)} method.
      *
-     * @function module:slaves/proxy.ProxyPromise#asProxy
+     * @function module:rodosha/proxy.ProxyPromise#asProxy
      * @param {boolean} [proxy] If `true` (or unspecified) the object returned
      *                          by the call will be a **proxy** object.
      * @return {ProxyPromise} This `very` instance.
      * @exception This method will throw an {@link Error} if the underlying
      *            message requesting the call's result was already sent (if
-     *            {@link module:slaves/proxy.ProxyPromise#then then(...)} was
+     *            {@link module:rodosha/proxy.ProxyPromise#then then(...)} was
      *            already called).
      */
     this.asProxy = function(proxy) {
@@ -598,9 +736,9 @@ Esquire.define('slaves/proxy', ['promize/Promise'], function(Promise) {
 
   /**
    * Wrap the specified **proxy** definition instrumenting all functions with
-   * remote executors returning {@link module:slaves/proxy.ProxyPromise}s.
+   * remote executors returning {@link module:rodosha/proxy.ProxyPromise}s.
    *
-   * @function module:slaves/proxy.buildProxy
+   * @function module:rodosha/proxy.buildProxy
    * @param {*} definition The definition to wrap
    * @return {object} A **proxy** object to an instance from the {@link Worker}.
    */
@@ -618,19 +756,19 @@ Esquire.define('slaves/proxy', ['promize/Promise'], function(Promise) {
 'use strict';
 
 /**
- * A module wrapping the {@link Slave} client code (basically the code executed
+ * A module wrapping the {@link Rodosha} client code (basically the code executed
  * by the {@link Worker} when starting up.
  *
- * @module slaves/servers
+ * @module rodosha/servers
  */
-Esquire.define('slaves/servers', ['promize/Promise', 'promize/Deferred' ,'slaves/messages' ,'slaves/proxy'],
+Esquire.define('rodosha/servers', ['promize/Promise', 'promize/Deferred' ,'rodosha/messages' ,'rodosha/proxy'],
 function(Promise, Deferred, messages, proxy) {
 
   /**
-   * Create a new {@link module:slaves/servers.Server Server} instance wrapping
+   * Create a new {@link module:rodosha/servers.Server Server} instance wrapping
    * a {@link Worker}.
    *
-   * @function module:slaves/servers.create
+   * @function module:rodosha/servers.create
    * @param {Worker} worker - The {@link Worker} to wrap.
    * @param {string} workerId - The unique identifier of the {@link Worker} for
    *                            logging and debugging purposes.
@@ -650,10 +788,10 @@ function(Promise, Deferred, messages, proxy) {
     /* ---------------------------------------------------------------------- */
 
     /**
-     * @class module:slaves/servers.Server
+     * @class module:rodosha/servers.Server
      * @classdesc A wrapper for a remote {@link Worker} capable of sending
      *            messages to it and processing received messages.
-     * @extends module:slaves.Slave
+     * @extends {module:rodosha.Rodosha}
      */
     var server = Object.freeze({
 
@@ -662,10 +800,10 @@ function(Promise, Deferred, messages, proxy) {
       /**
        * Initialize this instance.
        *
-       * @function module:slaves.Slave#init
+       * @function module:rodosha/servers.Server#init
        * @param {string[]} [modules] - An array of _Esquire_ module names known
        *                               to be available in the {@link Worker}
-       * @return {module:slaves.Slave} This instance.
+       * @return {Rodosha} This instance.
        */
       init: function(modules) {
         for (var i in modules) {
@@ -679,7 +817,7 @@ function(Promise, Deferred, messages, proxy) {
       /**
        * Encode and send the specified message to the {@link Worker}.
        *
-       * @function module:slaves.Slave#send
+       * @function module:rodosha/servers.Server#send
        * @param {*} message - The message to be encoded and sent.
        * @return {Promise} A {@link Promise} to the response from the response.
        */
@@ -714,9 +852,9 @@ function(Promise, Deferred, messages, proxy) {
        *
        * This method will correlate received messages with sent ones and will
        * either resolve or reject those {@link Promise}s returned by the
-       * {@link module:slaves.Slave#send send(...)} method.
+       * {@link Rodosha#send send(...)} method.
        *
-       * @function module:slaves.Slave#receive
+       * @function module:rodosha/servers.Server#receive
        * @param {*} data - The `event.data` part of the message received.
        */
       received: function(data) {
@@ -849,9 +987,9 @@ function(Promise, Deferred, messages, proxy) {
 /**
  * A module dealing with browser {@link Blob}s and {@link Worker}s.
  *
- * @module slaves/workers
+ * @module rodosha/workers
  */
-Esquire.define('slaves/workers', ['$global/Worker', '$global/Blob', '$global/BlobBuilder', '$global/URL'], function(Worker, Blob, BlobBuilder, URL) {
+Esquire.define('rodosha/workers', ['$global/Worker', '$global/Blob', '$global/BlobBuilder', '$global/URL'], function(Worker, Blob, BlobBuilder, URL) {
 
   /* Sanity check */
   if (! Worker) throw new Error("Worker API not supported");
@@ -935,143 +1073,6 @@ Esquire.define('slaves/workers', ['$global/Worker', '$global/Blob', '$global/Blo
     makeBlob: makeBlob,
     makeURL:  makeURL
   });
-
-});
-;
-'use strict';
-
-/**
- * The main entry point for operating with {@link Worker}s and {@link Slave}s.
- *
- * @module slaves
- */
-Esquire.define('slaves', [ 'promize/Deferred', 'slaves/servers', 'slaves/workers' ], function(Deferred, servers, workers) {
-
-  /**
-   * Create a new {@link Slave} instance.
-   *
-   * @function module:slaves.create
-   * @param {boolean} [debug] - If `true` (lots of) debugging information will
-   *                            be dumped to the console.
-   * @return {Promise} A {@link Promise} for a {@link Slave} instance.
-   */
-  return Object.freeze({ create: function(debug) {
-
-    var workerId = Math.floor(Math.random() * 0x0100000000).toString(16);
-    while (workerId.length < 8) workerId = '0' + workerId;
-
-    /* Our deferred for initialization */
-    var initialized = new Deferred();
-
-    /* Create our Blob URL */
-    var script = [];
-    script.push("(" + Esquire.$$script + ")(self);\n");
-    script.push(Esquire.module("slaves/messages").$$script + ";\n");
-    script.push(Esquire.module("slaves/client").$$script + ";\n");
-    script.push("new Esquire().require('slaves/client').init(" + debug + ");\n");
-
-    /* Dump our code for debugging */
-    if (debug) {
-      var debugScript = script.join('').split('\n');
-      for (var i in debugScript) {
-        var line = new Number(i) + 1;
-        line = line < 10 ? '  ' + line + ' - ':
-               line < 100 ? ' ' + line + ' - ' :
-               line + ' - ';
-        debugScript[i] = line + debugScript[i];
-      }
-      console.log("Worker[" + workerId + "] Script\n" + debugScript.join('\n'));
-    }
-
-    /* ---------------------------------------------------------------------- */
-
-    /* Create worker and wrap it into a server */
-    var server = servers.create(workers.makeWorker(script), workerId, debug);
-
-    /**
-     * @class Slave
-     * @memberof module:slaves
-     * @classdesc A {@link Slave} instance wraps a web {@link Worker} and
-     *            simplifies its interaction throgh the use of proxy objects.
-     */
-    var slave = Object.freeze({
-      /**
-       * Import one or more _Esquire_ modules in the {@link Worker}.
-       *
-       * If a module was already defined in the {@link Worker}, this method
-       * will ignore it.
-       *
-       * @function module:slaves.Slave#import
-       * @param {string|string[]} modules - A list of module names, as a
-       *                                    string or an array of strings.
-       * @param {string} [...] - Mode module names to import as arguments.
-       * @return {Promise} A promise to an array of modules actually imported.
-       */
-      'import':    function() { return server['import'   ].apply(server, arguments) },
-
-      /**
-       * Create a **proxy** object for an _Esquire_ module defined in the
-       * {@link Worker}.
-       *
-       * @function module:slaves.Slave#proxy
-       * @param {string} module - The name of the module to create a proxy for.
-       * @return {Promise} A promise to the proxy object.
-       */
-      'proxy':     function() { return server['proxy'    ].apply(server, arguments) },
-
-      /**
-       * Destroy the specified **proxy** object, releasing its instance in the
-       * {@link Worker}'s scope.
-       *
-       * @function module:slaves.Slave#destroy
-       * @param {object} proxy - The proxy module to destroy.
-       * @return {Promise} A promise to the completion of the operation.
-       */
-      'destroy':   function() { return server['destroy'  ].apply(server, arguments) },
-
-      /**
-       * Gracefully close the underlying {@link Worker}, allowing queued
-       * messages to be processed.
-       *
-       * @function module:slaves.Slave#close
-       * @return {Promise} A promise to the completion of the operation.
-       */
-      'close':     function() { return server['close'    ].apply(server, arguments) },
-
-      /**
-       * Immediately terminate the underlying {@link Worker}, forcing all
-       * pending messages to be discarded and unresolved {@link Promise}s to be
-       * rejected.
-       *
-       * @function module:slaves.Slave#terminate
-       */
-      'terminate': function() { return server['terminate'].apply(server, arguments) },
-    });
-
-    /* Error handler */
-    server.worker.onerror = function(event) {
-      console.error("Worker[" + workerId + "] Uncaught exception", event.data);
-      initialized.reject(event);
-    }
-
-    /* Message handler */
-    server.worker.onmessage = function(event) {
-
-      if ('initialized' in event.data) {
-        server.init(event.data.initialized);
-        initialized.resolve(slave);
-      } else try {
-        server.received(event.data);
-      } catch (error) {
-        console.error("Worker[" + workerId + "] Exception processing message", event.data, error);
-        console.error(error.stack);
-      }
-    }
-
-    /* Return our promise */
-    return initialized.promise;
-
-  }});
 
 });
 
