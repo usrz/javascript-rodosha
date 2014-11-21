@@ -22,11 +22,12 @@ Esquire.define('slaves/messages', [], function messages() {
     var name = "RemoteError" + (error.name ? ("[" + error.name + "]") : "");
     Error.call(message);
 
-    Object.defineProperties(this, {
-      "message" : { enumerable: true, configurable: false, get:   function() { return message }},
-      "name" :    { enumerable: true, configurable: false, get:   function() { return name    }},
-      "toString": { enumerable: true, configurable: false, value: function() { return name + ": " + message }}
-    });
+    /* Inject properties */
+    this.message = message;
+    this.name = name;
+    this.toString = function() {
+      return name + ": " + message;
+    }
 
     /**
      * @member {string} stack The stack trace associated with this instance,
@@ -34,17 +35,18 @@ Esquire.define('slaves/messages', [], function messages() {
      * @memberof module:slave/messages~RemoteError
      * @instance
      */
-    if ((error.stack) || (this.stack)) {
-      var localStack = this.stack;
-      /* Setting "this.stack" won't work */
-      Object.defineProperty(this, 'stack', { enumerable: false, configurable: false, get: function() {
-        var stack = this.toString();
-        if (error.stack) stack += "\nRemote stack: " + error.stack;
-        if (localStack)  stack += "\nLocal stack:" + localStack;
-        return stack;
-      }});
+    var localStack = this.stack || new Error().stack;
+    if (localStack) localStack = localStack.replace(/^(Remote)?Error\n/, '');
+
+    if ((error.stack) || (localStack)) {
+      var stack = this.toString();
+      if (error.stack) stack += "\n- Remote stack:\n" + error.stack;
+      if (localStack)  stack += "\n- Local stack:\n"  + localStack;
+      this.stack = stack;
     }
+
   }
+
   RemoteError.prototype = Object.create(Error.prototype);
   RemoteError.prototype.constructor = RemoteError;
   RemoteError.prototype.name = 'RemoteError';

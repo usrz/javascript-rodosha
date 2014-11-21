@@ -119,9 +119,9 @@ esquire(['slaves/messages'], function(messages) {
       expect(decoded["_error"].message).to.equal("BarMessage");
       expect(decoded["_error"].toString()).to.equal("RemoteError[FooError]: BarMessage");
       if (hasStack) {
-        expect(decoded["_error"].stack).to.match(/Remote stack: BazStack\nLocal stack:/m);
+        expect(decoded["_error"].stack).to.match(/^- Remote stack:$\n^BazStack$\n^- Local stack:$/m);
       } else {
-        expect(decoded["_error"].stack).to.match(/Remote stack: BazStack/m);
+        expect(decoded["_error"].stack).to.match(/^- Remote stack:$\n^BazStack$/m);
       }
     });
 
