@@ -124,7 +124,9 @@ function(Promise, Deferred, messages, proxy) {
             if (data.hasOwnProperty('proxy')) {
               deferred.resolve(proxy.buildProxy(data.proxy, this));
             } else if (data.hasOwnProperty('resolve')) {
-              deferred.resolve(data.resolve);
+              if (data.undefined === true) deferred.resolve(undefined);
+              else if (data.null === true) deferred.resolve(null);
+              else deferred.resolve(data.resolve);
             } else if (data.hasOwnProperty('reject')) {
               if (debug) console.warn("Rejected message " + msgid, data);
               deferred.reject(data.reject);
@@ -144,6 +146,7 @@ function(Promise, Deferred, messages, proxy) {
         if (! worker) return Promise.resolve();
         return this.send({close: true}).then(function(success) {
           server.terminate(new Error("Worker " + workerId + " closed"));
+          return success;
         });
       },
 

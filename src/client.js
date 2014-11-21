@@ -85,12 +85,14 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
         function(success) { message.accept(success) },
         function(failure) { message.reject(failure) }
       );
-    } else if (data !== undefined) {
+    } else if (data === undefined) {
+      $global.postMessage({ id: this.id, resolve: true, undefined: true });
+    } else if (data === null) {
+      $global.postMessage({ id: this.id, resolve: true, null: true });
+    } else {
       var response = this.data.makeProxy ? makeProxy(data) : { resolve: messages.encode(data) };
       response.id = this.id;
       $global.postMessage(response);
-    } else {
-      $global.postMessage({ id: this.id, resolve: true });
     }
   }
 
