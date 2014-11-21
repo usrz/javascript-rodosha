@@ -22,7 +22,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
 
     /* Functions always get invoked */
     if (typeof(object) === 'function') {
-      return true; // invoke
+      return { "__$$invocable$$__": true }; // invoke
     }
 
     /* Non-null, non-array objects will be defined recursively */
@@ -45,7 +45,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
     }
 
     /* Everything else is just a getter */
-    return false;
+    return { "__$$value$$__": object };
   }
 
   /* Make a proxy and return a valid response */

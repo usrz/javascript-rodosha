@@ -120,19 +120,27 @@ function(Promise, Deferred, messages, proxy) {
           var msgid = data.id;
           var deferred = pendingMessages[msgid];
           if (deferred) {
-            delete pendingMessages[msgid];
-            if (data.hasOwnProperty('proxy')) {
-              deferred.resolve(proxy.buildProxy(data.proxy, this));
-            } else if (data.hasOwnProperty('resolve')) {
-              if (data.undefined === true) deferred.resolve(undefined);
-              else if (data.null === true) deferred.resolve(null);
-              else deferred.resolve(data.resolve);
-            } else if (data.hasOwnProperty('reject')) {
-              if (debug) console.warn("Rejected message " + msgid, data);
-              deferred.reject(data.reject);
-            } else {
-              console.warn("Invalid message data " + msgid, data);
-              deferred.reject(new Error("Invalid message data"));
+            try {
+              delete pendingMessages[msgid];
+              if (data.hasOwnProperty('proxy')) {
+                deferred.resolve(proxy.buildProxy(data.proxy, this));
+              } else if (data.hasOwnProperty('resolve')) {
+                if (data.resolve === true) {
+                  if (data.undefined === true) deferred.resolve(undefined);
+                  else if (data.null === true) deferred.resolve(null);
+                  else deferred.resolve(true);
+                } else {
+                  deferred.resolve(data.resolve);
+                }
+              } else if (data.hasOwnProperty('reject')) {
+                if (debug) console.warn("Rejected message " + msgid, data);
+                deferred.reject(data.reject);
+              } else {
+                console.warn("Invalid message data " + msgid, data);
+                deferred.reject(new Error("Invalid message data"));
+              }
+            } catch(error) {
+              deferred.reject(error);
             }
           } else {
             console.error("Unknown message ID", msgid);

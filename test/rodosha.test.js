@@ -198,7 +198,7 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         expect(success[0]).to.be.equal('a-value');
         expect(success[1]).to.be.equal('b-value');
         expect(success[2]).to.be.equal('hello a-value b-value');
-        expect(success[3]).to.be.null;
+        expect(success[3]).to.be.equal(null);
         expect(success[4]).to.be.equal('b-value a-value world');
         expect(success[5]).to.be.deep.equal([]);
         return openRodosha.close();
@@ -327,24 +327,43 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
       })
 
       .then(function(proxy) {
+
+        /* Initially get the value... This will trigger the first road trip */
         var oldPromise = proxy.obj_d.prp;
 
+        /* Now, the "initialvalue" should be what has been proxied: null */
+        expect(oldPromise.initialValue()).to.be.equal(null);
+
+        /* This will trigger a road trip, but also change the initial value */
         proxy.obj_d.prp = random;
 
+        /* Check the "initialvalue" of the new promise */
         var prpPromise = proxy.obj_d.prp;
+        expect(oldPromise.initialValue()).to.be.equal(null);
+        expect(prpPromise.initialValue()).to.be.equal(random);
+
+        /* Just call the function */
         var fncPromise = proxy.obj_d.fnc("then");
 
+        /* Make sure those are all promises */
         expect(prpPromise).to.be.a('object');
         expect(fncPromise).to.be.a('object');
         expect(prpPromise.then).to.be.a('function');
         expect(fncPromise.then).to.be.a('function');
 
+        /* Next step... */
         return Promise.all([oldPromise, prpPromise, fncPromise]);
       })
 
       .then(function(success) {
         expect(success).to.be.instanceof(Array);
+
+        // [0] -> original value, [1] -> property getter promise, [2] -> function after getter
         expect(success).to.deep.equal([null, random, "b-value a-value then " + random]);
+
+        // here we should try to re-get the value, and verify that initial value has changed //
+
+
         return openRodosha.close();
       })
 
