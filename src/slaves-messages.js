@@ -4,9 +4,9 @@
  * A module providing utility functions for encoding and decoding messages to
  * and from a {@link Worker}.
  *
- * @module slaves/messages
+ * @module rodosha/messages
  */
-Esquire.define('slaves/messages', [], function messages() {
+Esquire.define('rodosha/messages', [], function messages() {
 
   /**
    * @classdesc An {@link Error} received from or sent to a {@link Worker}.
@@ -15,7 +15,7 @@ Esquire.define('slaves/messages', [], function messages() {
   function RemoteError(error) {
     /**
      * @member {string} message A message detailing the error.
-     * @memberof module:slave/messages~RemoteError
+     * @memberof module:rodosha/messages~RemoteError
      * @instance
      */
     var message = error.message || "Unknown error";
@@ -32,7 +32,7 @@ Esquire.define('slaves/messages', [], function messages() {
     /**
      * @member {string} stack The stack trace associated with this instance,
      *                        combining both local and remote details.
-     * @memberof module:slave/messages~RemoteError
+     * @memberof module:rodosha/messages~RemoteError
      * @instance
      */
     var localStack = this.stack || new Error().stack;

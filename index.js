@@ -67,4 +67,4 @@ Esquire.define("$global/URL", ["$global/Blob"], function(Blob) {
   });
 });
 
-module.exports = esquire('slaves');
+module.exports = esquire('rodosha');

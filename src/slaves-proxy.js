@@ -3,12 +3,12 @@
 /**
  * A module providing a utility function to wrap remote {@link Worker} objects.
  *
- * @module slaves/proxy
+ * @module rodosha/proxy
  */
-Esquire.define('slaves/proxy', ['promize/Promise'], function(Promise) {
+Esquire.define('rodosha/proxy', ['promize/Promise'], function(Promise) {
 
   /**
-   * @class module:slaves/proxy.ProxyPromise
+   * @class module:rodosha/proxy.ProxyPromise
    * @classdesc A specialized {@link Promise} returned by `function`s invoked
    *            on **proxy** objects.
    * @extends Promise
@@ -22,15 +22,15 @@ Esquire.define('slaves/proxy', ['promize/Promise'], function(Promise) {
      *
      * This instance will wait sending the method request to the remote
      * {@link Worker} until a fulfillment or rejection handler is attached via
-     * the {@link module:slaves/proxy.ProxyPromise#then then(...)} method.
+     * the {@link module:rodosha/proxy.ProxyPromise#then then(...)} method.
      *
-     * @function module:slaves/proxy.ProxyPromise#asProxy
+     * @function module:rodosha/proxy.ProxyPromise#asProxy
      * @param {boolean} [proxy] If `true` (or unspecified) the object returned
      *                          by the call will be a **proxy** object.
      * @return {ProxyPromise} This `very` instance.
      * @exception This method will throw an {@link Error} if the underlying
      *            message requesting the call's result was already sent (if
-     *            {@link module:slaves/proxy.ProxyPromise#then then(...)} was
+     *            {@link module:rodosha/proxy.ProxyPromise#then then(...)} was
      *            already called).
      */
     this.asProxy = function(proxy) {
@@ -120,9 +120,9 @@ Esquire.define('slaves/proxy', ['promize/Promise'], function(Promise) {
 
   /**
    * Wrap the specified **proxy** definition instrumenting all functions with
-   * remote executors returning {@link module:slaves/proxy.ProxyPromise}s.
+   * remote executors returning {@link module:rodosha/proxy.ProxyPromise}s.
    *
-   * @function module:slaves/proxy.buildProxy
+   * @function module:rodosha/proxy.buildProxy
    * @param {*} definition The definition to wrap
    * @return {object} A **proxy** object to an instance from the {@link Worker}.
    */

@@ -1,11 +1,11 @@
 {
-  "name": "slaves",
+  "name": "rodosha",
   "version": "0.0.0",
-  "description": "USRZ Slaves API",
+  "description": "USRZ Rodosha API",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/usrz/javascript-slaves.git"
+    "url": "git://github.com/usrz/javascript-rodosha.git"
   },
   "devDependencies": {
     "grunt": "^0.4.5",

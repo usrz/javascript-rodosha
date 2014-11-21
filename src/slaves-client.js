@@ -1,12 +1,13 @@
 'use strict';
 
 /**
- * A module wrapping the {@link Slave} client code (basically the code executed
- * by the {@link Worker} in order to process messages from the {@link Server}).
+ * A module wrapping the {@link Rodosha} client code (basically the code
+ * executed by the {@link Worker} in order to process and respond to messages
+ * from the {@link Server}).
  *
- * @module slaves/client
+ * @module rodosha/client
  */
-Esquire.define('slaves/client', ['$global', '$esquire', 'slaves/messages'], function($global, $esquire, messages) {
+Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], function($global, $esquire, messages) {
 
   /* ======================================================================== */
   /* OBJECT PROXIES                                                           */
@@ -104,7 +105,7 @@ Esquire.define('slaves/client', ['$global', '$esquire', 'slaves/messages'], func
   /**
    * Initialize the {@link Worker} side.
    *
-   * @function module:slaves/client.init
+   * @function module:rodosha/client.init
    * @param {boolean} [debug] - If `true` debug messages will be sent over and
    *                            logged on the {@link Server}'s console.
    */

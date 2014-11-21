@@ -1,19 +1,19 @@
 'use strict';
 
 /**
- * A module wrapping the {@link Slave} client code (basically the code executed
+ * A module wrapping the {@link Rodosha} client code (basically the code executed
  * by the {@link Worker} when starting up.
  *
- * @module slaves/servers
+ * @module rodosha/servers
  */
-Esquire.define('slaves/servers', ['promize/Promise', 'promize/Deferred' ,'slaves/messages' ,'slaves/proxy'],
+Esquire.define('rodosha/servers', ['promize/Promise', 'promize/Deferred' ,'rodosha/messages' ,'rodosha/proxy'],
 function(Promise, Deferred, messages, proxy) {
 
   /**
-   * Create a new {@link module:slaves/servers.Server Server} instance wrapping
+   * Create a new {@link module:rodosha/servers.Server Server} instance wrapping
    * a {@link Worker}.
    *
-   * @function module:slaves/servers.create
+   * @function module:rodosha/servers.create
    * @param {Worker} worker - The {@link Worker} to wrap.
    * @param {string} workerId - The unique identifier of the {@link Worker} for
    *                            logging and debugging purposes.
@@ -33,10 +33,10 @@ function(Promise, Deferred, messages, proxy) {
     /* ---------------------------------------------------------------------- */
 
     /**
-     * @class module:slaves/servers.Server
+     * @class module:rodosha/servers.Server
      * @classdesc A wrapper for a remote {@link Worker} capable of sending
      *            messages to it and processing received messages.
-     * @extends module:slaves.Slave
+     * @extends {module:rodosha.Rodosha}
      */
     var server = Object.freeze({
 
@@ -45,10 +45,10 @@ function(Promise, Deferred, messages, proxy) {
       /**
        * Initialize this instance.
        *
-       * @function module:slaves.Slave#init
+       * @function module:rodosha/servers.Server#init
        * @param {string[]} [modules] - An array of _Esquire_ module names known
        *                               to be available in the {@link Worker}
-       * @return {module:slaves.Slave} This instance.
+       * @return {Rodosha} This instance.
        */
       init: function(modules) {
         for (var i in modules) {
@@ -62,7 +62,7 @@ function(Promise, Deferred, messages, proxy) {
       /**
        * Encode and send the specified message to the {@link Worker}.
        *
-       * @function module:slaves.Slave#send
+       * @function module:rodosha/servers.Server#send
        * @param {*} message - The message to be encoded and sent.
        * @return {Promise} A {@link Promise} to the response from the response.
        */
@@ -97,9 +97,9 @@ function(Promise, Deferred, messages, proxy) {
        *
        * This method will correlate received messages with sent ones and will
        * either resolve or reject those {@link Promise}s returned by the
-       * {@link module:slaves.Slave#send send(...)} method.
+       * {@link Rodosha#send send(...)} method.
        *
-       * @function module:slaves.Slave#receive
+       * @function module:rodosha/servers.Server#receive
        * @param {*} data - The `event.data` part of the message received.
        */
       received: function(data) {

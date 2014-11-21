@@ -1,4 +1,4 @@
-/** @typedef {module:slaves.Slave} Slave */
+/** @typedef {module:rodosha.Rodosha} Rodosha */
 
 /* ========================================================================== */
 

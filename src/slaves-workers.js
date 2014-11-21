@@ -3,9 +3,9 @@
 /**
  * A module dealing with browser {@link Blob}s and {@link Worker}s.
  *
- * @module slaves/workers
+ * @module rodosha/workers
  */
-Esquire.define('slaves/workers', ['$global/Worker', '$global/Blob', '$global/BlobBuilder', '$global/URL'], function(Worker, Blob, BlobBuilder, URL) {
+Esquire.define('rodosha/workers', ['$global/Worker', '$global/Blob', '$global/BlobBuilder', '$global/URL'], function(Worker, Blob, BlobBuilder, URL) {
 
   /* Sanity check */
   if (! Worker) throw new Error("Worker API not supported");

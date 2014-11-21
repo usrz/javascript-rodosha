@@ -32,7 +32,7 @@ module.exports = function(grunt) {
     concat: {
       build: {
         src: 'src/**/*.js',
-        dest: 'slaves.js',
+        dest: 'rodosha.js',
         options: {
           banner: '(function() {\n',
           footer: '\n})();\n',
@@ -45,7 +45,7 @@ module.exports = function(grunt) {
     uglify: {
       build: {
         src: 'src/**/*.js',
-        dest: 'slaves.min.js',
+        dest: 'rodosha.min.js',
         options: {
           wrap: true
         }

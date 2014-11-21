@@ -1,7 +1,7 @@
 'use strict';
 
-esquire(['$esquire', 'slaves', 'promize/Promise', 'promize/Deferred', 'slaves/messages', '$global'],
-function($esquire, slaves, Promise, Deferred, messages, $global) {
+esquire(['$esquire', 'rodosha', 'promize/Promise', 'promize/Deferred', 'rodosha/messages', '$global'],
+function($esquire, rodosha, Promise, Deferred, messages, $global) {
 
   /* Run tests on Node */
   if (!('document' in $global)) $global.document = "fake";
@@ -82,7 +82,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
 
   /* ======================================================================== */
 
-  describe("Slaves", function() {
+  describe("Rodosha", function() {
 
     /* A quick check to valdate our bloated object here */
     it("should validate locally", function() {
@@ -107,18 +107,18 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
 
     /* Create a proxy to a string (module_a) and check it */
     it("should create proxy to a string", function(done) {
-      var openSlave;
-      slaves.create(debug)
+      var openRodosha;
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_a");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_a");
       })
 
       .then(function(proxy) {
         expect(proxy).to.be.a('string');
         expect(proxy).to.be.equal("a-value");
-        return openSlave.close();
+        return openRodosha.close();
       })
 
       .then(function(success) {
@@ -133,12 +133,12 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
 
     /* Create a proxy to a function (module_b) and check it */
     it("should create proxy to a function", function(done) {
-      var openSlave;
-      slaves.create(debug)
+      var openRodosha;
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_b");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_b");
       })
 
       .then(function(proxy) {
@@ -148,7 +148,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
 
       .then(function(result) {
         expect(result).to.be.equal("b-value");
-        return openSlave.close();
+        return openRodosha.close();
       })
 
       .then(function(success) {
@@ -165,12 +165,12 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
     /* Create a proxy to a more complex object (module_c) and check it */
     it("should create a proxy to an object", function(done) {
 
-      var openSlave;
-      slaves.create(debug)
+      var openRodosha;
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_c");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_c");
       })
 
       .then(function(proxy) {
@@ -201,7 +201,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
         expect(success[3]).to.be.null;
         expect(success[4]).to.be.equal('b-value a-value world');
         expect(success[5]).to.be.deep.equal([]);
-        return openSlave.close();
+        return openRodosha.close();
       })
 
       .then(function(success) {
@@ -218,14 +218,14 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
     /* Create a proxy to a more complex object (module_c) and check it */
     it("should create a proxy on-demand", function(done) {
 
-      var openSlave;
+      var openRodosha;
       var openProxy;
 
-      slaves.create(debug)
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_c");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_c");
       })
 
       .then(function(proxy) {
@@ -245,7 +245,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
         expect(success.length).to.be.equal(2);
         expect(success[0]).to.be.equal('b-value a-value foo');
         expect(success[1]).to.be.equal('b-value a-value bar');
-        return openSlave.close();
+        return openRodosha.close();
       })
 
       .then(function(success) {
@@ -262,16 +262,16 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
     /* Make sure that arrays are cloned, not proxied like objects */
     it("should ignore arrays proxying", function(done) {
 
-      var openSlave;
+      var openRodosha;
       var random = Math.floor(Math.random() * 0x0FFFFFFFF);
       var rproxy = null;
       var rarray = null;
 
-      slaves.create(debug)
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_c");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_c");
       })
 
       .then(function(proxy) {
@@ -301,7 +301,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
         expect(success).to.be.instanceof(Array);
         expect(success).to.include(random);
         expect(success).to.not.be.deep.equal(rarray);
-        return openSlave.close();
+        return openRodosha.close();
       })
 
       .then(function(success) {
@@ -317,13 +317,13 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
     it("should correctly set remote values", function(done) {
 
       var random = Math.floor(Math.random() * 0x0FFFFFFFF);
-      var openSlave;
+      var openRodosha;
 
-      slaves.create(debug)
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_c");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_c");
       })
 
       .then(function(proxy) {
@@ -345,7 +345,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
       .then(function(success) {
         expect(success).to.be.instanceof(Array);
         expect(success).to.deep.equal([null, random, "b-value a-value then " + random]);
-        return openSlave.close();
+        return openRodosha.close();
       })
 
       .then(function(success) {
@@ -361,12 +361,12 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
     /* Make sure that exceptions are properly propagated from the worker */
     it("should correctly reject exceptions", function(done) {
 
-      var openSlave;
-      slaves.create(debug)
+      var openRodosha;
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_c");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_c");
       })
 
       .then(function(proxy) {
@@ -378,7 +378,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
       }, function(failure) {
         expect(failure).to.be.instanceof(messages.RemoteError);
         expect(failure.message).to.be.equal("This will always throw something");
-        return openSlave.close();
+        return openRodosha.close();
       })
 
       .then(function(success) {
@@ -395,10 +395,10 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
 
       var result = "This should be thrown: " + Math.floor(Math.random() * 0x0FFFFFFFF);
 
-      slaves.create(debug)
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        return slave.proxy("module_c");
+      .then(function(instance) {
+        return instance.proxy("module_c");
       })
 
       .then(function(proxy) {
@@ -422,13 +422,13 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
     it("should reject a remote rejected promise", function(done) {
 
       var result = "This should be good: " + Math.floor(Math.random() * 0x0FFFFFFFF);
-      var openSlave;
+      var openRodosha;
 
-      slaves.create(debug)
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_c");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_c");
       })
 
       .then(function(proxy) {
@@ -440,7 +440,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
       }, function(failure) {
         expect(failure).to.be.instanceof(messages.RemoteError);
         expect(failure.message).to.be.equal(result);
-        return openSlave.close();
+        return openRodosha.close();
       })
 
       .then(function(success) {
@@ -455,19 +455,19 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
 
     it("should destroy a remote proxy", function(done) {
 
-      var openSlave;
+      var openRodosha;
       var openProxy;
 
-      slaves.create(debug)
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_c");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_c");
       })
 
       .then(function(proxy) {
         openProxy = proxy;
-        return openSlave.destroy(proxy);
+        return openRodosha.destroy(proxy);
       })
 
       .then(function(success) {
@@ -479,7 +479,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
       }, function(failure) {
         expect(failure).to.be.instanceof(messages.RemoteError);
         expect(failure.message).to.be.equal("Proxy 'proxy_1.obj_d.fnc' not found");
-        return openSlave.close();
+        return openRodosha.close();
       })
 
       .then(function(success) {
@@ -498,17 +498,17 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
 
       var start = new Date().getTime();
       var count = 1000;
-      var openSlave;
+      var openRodosha;
 
-      slaves.create(debug)
+      rodosha.create(debug)
 
-      .then(function(slave) {
+      .then(function(instance) {
         var now = new Date().getTime();
         console.log("Created in " + (now - start) + " ms");
 
-        openSlave = slave;
+        openRodosha = instance;
 
-        var promise = slave.proxy("module_c");
+        var promise = instance.proxy("module_c");
         start = new Date().getTime();
         return promise;
       })
@@ -538,7 +538,7 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
         for (var i in results) {
           expect(results[i], "Result at index " + i).to.be.equal('count ' + i);
         }
-        var promise = openSlave.close();
+        var promise = openRodosha.close();
         start = new Date().getTime();
         return promise;
       })
@@ -558,20 +558,20 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
     /* Make sure that close will gracefully close the worker */
     it("should close successfully", function(done) {
 
-      var openSlave;
+      var openRodosha;
       var openProxy;
 
-      slaves.create(debug)
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_b");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_b");
       })
 
       .then(function(proxy) {
         openProxy = proxy;
         var resultPromise = proxy().then(); // make sure message gets sent ...
-        var closePromise = openSlave.close(); // ... before slave is closed!
+        var closePromise = openRodosha.close(); // ... before instance is closed!
         return Promise.all([resultPromise, closePromise]);
       })
 
@@ -604,18 +604,18 @@ function($esquire, slaves, Promise, Deferred, messages, $global) {
     it("should terminate immediately", function(done) {
 
       var termination = new Error("Terminated foolishly");
-      var openSlave;
+      var openRodosha;
 
-      slaves.create(debug)
+      rodosha.create(debug)
 
-      .then(function(slave) {
-        openSlave = slave;
-        return slave.proxy("module_b");
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("module_b");
       })
 
       .then(function(proxy) {
         var resultPromise = proxy().then(); // make sure message gets sent ...
-        openSlave.terminate(termination);   // ... before slave is terminated!
+        openRodosha.terminate(termination);   // ... before instance is terminated!
         return resultPromise;
       })
 

@@ -1,29 +1,32 @@
-USRZ Slaves API
-===============
+USRZ Rodosha API
+================
 
 <div class="nojsdoc">
   <p><strong>It also works in <a href="NODE.md">Node.JS</a>.</strong></p>
 </div>
 
-Slaves are an easier way to deal with multi-threading in the browser by using
+Rodosha (&#x52b4;&#x50cd;&#x8005; - or _"worker"_ in Japanese) are an easier
+way to deal with multi-threading in the browser by using
 [_Web Workers_](https://developer.mozilla.org/en-US/docs/Web/Guide/Performance/Using_web_workers)
 
-The implementation is wrapped in a `slaves`
-[_Esquire_](https://github.com/usrz/javascript-esquire) module.
+The implementation is wrapped in a `rodosha`
+[_Esquire_](https://github.com/usrz/javascript-esquire) module which provides
+a `create(...)` method. This method will return a `Promise` which will be
+resolved with the instance of the `Rodosha` or rejected with a failure:
 
 ```javascript
-esquire.inject(['slaves'], function(slaves) {
-  slaves.create().then(function(slave) {
+esquire.inject(['rodosha'], function(rodoshaFactory) {
+  rodoshaFactory.create().then(function(rodosha) {
     // foo! do something...
   });
 })
 ```
 
-`Slave`s operate mainly of _Esquire_ modules which can be imported directly
+`Rodosha`s operate mainly of _Esquire_ modules which can be imported directly
 in a remote `worker`:
 
 ```javascript
-slave.import('module-a', 'module-b').then(function(imported) {
+rodosha.import('module-a', 'module-b').then(function(imported) {
   // the modules (and all their dipendencies) were imported...
 });
 ```
@@ -35,7 +38,7 @@ After those modules are imported, local **proxy** objects pointing to their
 instances in the worker can be created quite trivially:
 
 ```javascript
-slave.proxy('module-a').then(function(proxy) {
+rodosha.proxy('module-a').then(function(proxy) {
   // the "proxy" variable is a local object proxying an instance in the worker
 })
 ```
@@ -102,22 +105,22 @@ Proxies can (should) be discarded when no longer needed, freeing up memory
 in the `Worker`:
 
 ```javascript
-slave.destroy(proy);
+rodosha.destroy(proy);
 ```
 
 The `Worker` itself can be closed gracefully
 
 ```javascript
-slave.close().then(function() {
+rodosha.close().then(function() {
   // nicely closed
 });
 ```
 
-or terminated abruptly calling `slave.terminate()`.
+or terminated abruptly calling `rodosha.terminate()`.
 
 <div class="nojsdoc">
   <h2>Further reading</h2>
   <p>Licensed under the <a href="LICENSE.md">Apache Software License 2.0</a></p>
   <p>The full API documentation is avaiblable
-  <a target="_blank" href="http://usrz.github.io/javascript-slaves/">here</a>.</p>
+  <a target="_blank" href="http://usrz.github.io/javascript-rodosha/">here</a>.</p>
 </div>
