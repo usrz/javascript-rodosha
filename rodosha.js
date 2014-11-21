@@ -298,15 +298,31 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
  */
 Esquire.define('rodosha', [ 'defers/Deferred', 'rodosha/servers', 'rodosha/workers' ], function(Deferred, servers, workers) {
 
+  function dependencies(modules, moduleName) {
+    var module = Esquire.module(moduleName);
+    if (!module) throw new Error("Module '" + moduleName + "' not found");
+    modules[module.name] = module;
+    var dependencies = Esquire.resolve(module, true);
+    for (var i in dependencies) {
+      var dependency = dependencies[i];
+      if (dependency.$$dynamic) continue;
+      modules[dependency.name] = dependency;
+    }
+    return modules;
+  }
+
   /**
    * Create a new {@link Rodosha} instance.
    *
    * @function module:rodosha.create
+   * @param {string} [module] - Any module to import in the {@link Worker} at
+   *                            construction time.
+   * @param {string} [...] - Any other module name (allows multiple arguments)
    * @param {boolean} [debug] - If `true` (lots of) debugging information will
    *                            be dumped to the console.
    * @return {Promise} A {@link Promise} for a {@link Rodosha} instance.
    */
-  return Object.freeze({ create: function(debug) {
+  return Object.freeze({ create: function() {
 
     var workerId = Math.floor(Math.random() * 0x0100000000).toString(16);
     while (workerId.length < 8) workerId = '0' + workerId;
@@ -314,11 +330,32 @@ Esquire.define('rodosha', [ 'defers/Deferred', 'rodosha/servers', 'rodosha/worke
     /* Our deferred for initialization */
     var initialized = new Deferred();
 
+    /* Debug? */
+    var debug = false;
+    var lastArgument = arguments.length;
+    if (arguments.length > 0) {
+      if (typeof(arguments[arguments.length - 1]) === 'boolean') {
+        debug = arguments[arguments.length - 1];
+        lastArgument -= 1;
+      }
+    }
+
+    /* Resolve any module from the arguments */
+    var modules = dependencies({}, "rodosha/client");
+    for (var i = 0; i < lastArgument; i ++) {
+      modules = dependencies(modules, arguments[i]);
+    }
+
     /* Create our Blob URL */
     var script = [];
     script.push("(" + Esquire.$$script + ")(self);\n");
-    script.push(Esquire.module("rodosha/messages").$$script + ";\n");
-    script.push(Esquire.module("rodosha/client").$$script + ";\n");
+
+    /* All our preimported modules */
+    for (var i in modules) {
+      script.push(modules[i].$$script + ";\n")
+    }
+
+    /* Initialize the client */
     script.push("new Esquire().require('rodosha/client').init(" + debug + ");\n");
 
     /* Dump our code for debugging */
@@ -346,6 +383,8 @@ Esquire.define('rodosha', [ 'defers/Deferred', 'rodosha/servers', 'rodosha/worke
      *            simplifies its interaction throgh the use of proxy objects.
      */
     var rodosha = Object.freeze({
+      get modules() { return server.modules },
+
       /**
        * Import one or more _Esquire_ modules in the {@link Worker}.
        *
@@ -830,7 +869,8 @@ function(Promise, Deferred, messages, proxy) {
      */
     var server = Object.freeze({
 
-      worker: worker,
+      get worker() { return worker },
+      get modules() { return Object.keys(injectedModules) },
 
       /**
        * Initialize this instance.
@@ -987,6 +1027,7 @@ function(Promise, Deferred, messages, proxy) {
         var injectables = [];
         for (var moduleName in modules) {
           if (injectedModules[moduleName]) continue;
+          if (modules[moduleName].$$dynamic) continue;
           injectables.push(modules[moduleName]);
         }
 

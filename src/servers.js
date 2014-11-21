@@ -40,7 +40,8 @@ function(Promise, Deferred, messages, proxy) {
      */
     var server = Object.freeze({
 
-      worker: worker,
+      get worker() { return worker },
+      get modules() { return Object.keys(injectedModules) },
 
       /**
        * Initialize this instance.
@@ -197,6 +198,7 @@ function(Promise, Deferred, messages, proxy) {
         var injectables = [];
         for (var moduleName in modules) {
           if (injectedModules[moduleName]) continue;
+          if (modules[moduleName].$$dynamic) continue;
           injectables.push(modules[moduleName]);
         }
 

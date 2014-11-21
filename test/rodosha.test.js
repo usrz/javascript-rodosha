@@ -212,6 +212,38 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
 
     });
 
+    /* ---------------------------------------------------------------------- */
+
+    it("should import a number of initial scripts", function(done) {
+
+      Promise.all([
+        rodosha.create('module_a', debug).then(function(r) {
+          expect(r.modules).to.include('module_a');
+          return r.close();
+        }),
+        rodosha.create('module_b', debug).then(function(r) {
+          expect(r.modules).to.include('module_b');
+          return r.close();
+        }),
+        rodosha.create('module_a', 'module_b', debug).then(function(r) {
+          expect(r.modules).to.include('module_a');
+          expect(r.modules).to.include('module_b');
+          return r.close();
+        }),
+        rodosha.create('module_c', debug).then(function(r) {
+          expect(r.modules).to.include('module_a');
+          expect(r.modules).to.include('module_b');
+          expect(r.modules).to.include('module_c');
+          return r.close();
+        }),
+      ])
+
+      .then(function(success) {
+        done();
+      }, function(failure) {
+        done(failure);
+      })
+    });
 
     /* ---------------------------------------------------------------------- */
 
