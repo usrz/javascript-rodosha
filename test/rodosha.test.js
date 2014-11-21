@@ -361,9 +361,6 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         // [0] -> original value, [1] -> property getter promise, [2] -> function after getter
         expect(success).to.deep.equal([null, random, "b-value a-value then " + random]);
 
-        // here we should try to re-get the value, and verify that initial value has changed //
-
-
         return openRodosha.close();
       })
 
