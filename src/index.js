@@ -5,7 +5,7 @@
  *
  * @module rodosha
  */
-Esquire.define('rodosha', [ 'promize/Deferred', 'rodosha/servers', 'rodosha/workers' ], function(Deferred, servers, workers) {
+Esquire.define('rodosha', [ 'defers/Deferred', 'rodosha/servers', 'rodosha/workers' ], function(Deferred, servers, workers) {
 
   /**
    * Create a new {@link Rodosha} instance.

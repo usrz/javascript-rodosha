@@ -6,7 +6,7 @@
  *
  * @module rodosha/servers
  */
-Esquire.define('rodosha/servers', ['promize/Promise', 'promize/Deferred' ,'rodosha/messages' ,'rodosha/proxy'],
+Esquire.define('rodosha/servers', ['defers/Promise', 'defers/Deferred' ,'rodosha/messages' ,'rodosha/proxy'],
 function(Promise, Deferred, messages, proxy) {
 
   /**

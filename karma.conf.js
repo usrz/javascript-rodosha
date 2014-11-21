@@ -12,7 +12,7 @@ module.exports = function(config) {
 
     /* These need to be in order */
     files: [
-      'node_modules/promize/src/**/*.js',
+      'node_modules/defers/src/**/*.js',
       'src/**/*.js',
       'test/**/*.js',
     ],

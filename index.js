@@ -2,7 +2,7 @@
 
 /* Load our dependencies */
 var esquire = require('esquire');
-var promize = require('promize');
+var defers = require('defers');
 
 var joinPath = require('path').join;
 var TmpFile = require('temporary').File;

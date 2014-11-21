@@ -1,6 +1,6 @@
 'use strict';
 
-esquire(['$esquire', 'rodosha', 'promize/Promise', 'promize/Deferred', 'rodosha/messages', '$global'],
+esquire(['$esquire', 'rodosha', 'defers/Promise', 'defers/Deferred', 'rodosha/messages', '$global'],
 function($esquire, rodosha, Promise, Deferred, messages, $global) {
 
   /* Run tests on Node */
@@ -21,7 +21,7 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
     }
   });
 
-  Esquire.define("module_c", ["module_a", "module_b", "promize/Deferred", "$global"], function(a, b, Deferred, $global) {
+  Esquire.define("module_c", ["module_a", "module_b", "defers/Deferred", "$global"], function(a, b, Deferred, $global) {
     var array = [];
     return {
       prp_a: a,

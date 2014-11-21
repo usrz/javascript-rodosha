@@ -294,7 +294,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
  *
  * @module rodosha
  */
-Esquire.define('rodosha', [ 'promize/Deferred', 'rodosha/servers', 'rodosha/workers' ], function(Deferred, servers, workers) {
+Esquire.define('rodosha', [ 'defers/Deferred', 'rodosha/servers', 'rodosha/workers' ], function(Deferred, servers, workers) {
 
   /**
    * Create a new {@link Rodosha} instance.
@@ -621,7 +621,7 @@ Esquire.define('rodosha/messages', [], function messages() {
  *
  * @module rodosha/proxy
  */
-Esquire.define('rodosha/proxy', ['promize/Promise'], function(Promise) {
+Esquire.define('rodosha/proxy', ['defers/Promise'], function(Promise) {
 
   /**
    * @class module:rodosha/proxy.ProxyPromise
@@ -761,7 +761,7 @@ Esquire.define('rodosha/proxy', ['promize/Promise'], function(Promise) {
  *
  * @module rodosha/servers
  */
-Esquire.define('rodosha/servers', ['promize/Promise', 'promize/Deferred' ,'rodosha/messages' ,'rodosha/proxy'],
+Esquire.define('rodosha/servers', ['defers/Promise', 'defers/Deferred' ,'rodosha/messages' ,'rodosha/proxy'],
 function(Promise, Deferred, messages, proxy) {
 
   /**
