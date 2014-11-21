@@ -23,7 +23,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
 
     /* Functions always get invoked */
     if (typeof(object) === 'function') {
-      return true; // invoke
+      return { "__$$invocable$$__": true }; // invoke
     }
 
     /* Non-null, non-array objects will be defined recursively */
@@ -46,7 +46,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
     }
 
     /* Everything else is just a getter */
-    return false;
+    return { "__$$value$$__": object };
   }
 
   /* Make a proxy and return a valid response */
@@ -86,12 +86,14 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
         function(success) { message.accept(success) },
         function(failure) { message.reject(failure) }
       );
-    } else if (data !== undefined) {
+    } else if (data === undefined) {
+      $global.postMessage({ id: this.id, resolve: true, undefined: true });
+    } else if (data === null) {
+      $global.postMessage({ id: this.id, resolve: true, null: true });
+    } else {
       var response = this.data.makeProxy ? makeProxy(data) : { resolve: messages.encode(data) };
       response.id = this.id;
       $global.postMessage(response);
-    } else {
-      $global.postMessage({ id: this.id, resolve: true });
     }
   }
 
@@ -622,14 +624,14 @@ Esquire.define('rodosha/messages', [], function messages() {
  * @module rodosha/proxy
  */
 Esquire.define('rodosha/proxy', ['defers/Promise'], function(Promise) {
-
+var q = 0;
   /**
    * @class module:rodosha/proxy.ProxyPromise
    * @classdesc A specialized {@link Promise} returned by `function`s invoked
    *            on **proxy** objects.
    * @extends Promise
    */
-  function ProxyPromise(message, send) {
+  function ProxyPromise(message, send, initialValue) {
     var promise = null;
 
     /**
@@ -657,6 +659,20 @@ Esquire.define('rodosha/proxy', ['defers/Promise'], function(Promise) {
       return this;
     }
 
+    /**
+     * Return the initial value stored by this proxy instance, or in other
+     * words, the value that was recorded by this proxy instance from its last
+     * round trip (either a get or a set).
+     *
+     * This always returns `undefined` for function calls.
+     *
+     * @function module:rodosha/proxy.ProxyPromise#initialValue
+     * @return {*} The initial value stored by this proxy instance.
+     */
+    this.initialValue = function() {
+      return initialValue;
+    }
+
     this.then = function(onSuccess, onFailure) {
       /* Send the message if we haven't done so already */
       try {
@@ -676,51 +692,18 @@ Esquire.define('rodosha/proxy', ['defers/Promise'], function(Promise) {
 
   /* ======================================================================== */
 
-  function makeProxy(definition, names, send) {
+  function makeProxy(definition, names, send, rootDefinition) {
     if (! names) throw new Error("No name proxying definition " + JSON.stringify(definition));
     if (! Array.isArray(names)) names = [ names ];
 
-    /* Object definitions need to be re-wrapped */
-    if (typeof(definition) === 'object') {
-
-      var object = Object.defineProperty({}, "$$proxyId$$", {
-        enumerable: false, configurable: false, value: names[0]
-      });
-
-      for (var i in definition) {
-        (function(i) {
-          var child = definition[i];
-          var clone = names.slice(0);
-          clone.push(i);
-
-          /* Basic properties for the object to define */
-          var props = { enumerable: true, configurable: false };
-
-          if (typeof(child) === 'object') {
-            /* Create dynamic proxies for nested definitions */
-            props.get = function() { return makeProxy(child, clone, send) }
-
-          } else if (child === true) {
-            /* A function can be simply wrapped (call recursively) */
-            props.value = makeProxy(child, clone, send);
-
-          } else {
-            /* All other properties just request values asynchronously */
-            props['get'] = function() { return send({ proxy: { proxy: clone } })};
-            props['set'] = function(v) { send({ proxy: { value: v, proxy: clone } }) };
-          }
-
-          /* Define the properties for this */
-          Object.defineProperty(object, i, props);
-        })(i);
-      }
-
-      return object;
-
+    /* All definitions are objects! */
+    if (typeof(definition) !== 'object') {
+      throw new Error("Wrong proxy definition at " + names.join('.') + " for \n"
+                    + JSON.stringify(rootDefinition, null, 1));
     }
 
-    /* The definition is "true" meaning "invoke me" */
-    if (definition === true) {
+    /* Function definitions, can be also at top level */
+    if (definition['__$$invocable$$__'] === true) {
       var clone = names.slice(0);
       return function() {
         /* Prepare our message and return a promise to send */
@@ -729,9 +712,60 @@ Esquire.define('rodosha/proxy', ['defers/Promise'], function(Promise) {
       }
     }
 
-    /* The definition is "false", meaning request a remote value */
-    throw new Error("Wrong proxy definition for ", names);
+    /* Not a function definition, therefore clone! */
+    var object = {};
+    for (var i in definition) {
+      (function(i) {
+        var child = definition[i];
+        var clone = names.slice(0);
+        clone.push(i);
 
+        /* Basic properties for the object to define */
+        var props = { enumerable: true, configurable: false };
+
+        /* Function definitions */
+        if (child['__$$invocable$$__'] === true) {
+          props.value = makeProxy(child, clone, send, rootDefinition);
+        }
+
+        /* Setters/getters definitions */
+        else if (child.hasOwnProperty('__$$value$$__')) {
+          var initialValue = child['__$$value$$__'];
+          props['get'] = function() {
+            var message = { proxy: { proxy: clone } };
+            var promise = new ProxyPromise(message, send, initialValue);
+            promise.asProxy = function() { return promise } // already a proxy
+            promise.then(function(success) { initialValue = success });
+            return promise; // return the original ProxyPromise instance
+          };
+          props['set'] = function(value) {
+            initialValue = value;
+            send({ proxy: { value: value, proxy: clone } })
+              .then(function(success) { initialValue = success });
+          };
+        }
+
+        /* */
+        else if (typeof(child) === 'object') {
+          /* Create dynamic proxies for nested definitions */
+          //props.get = function() { return makeProxy(child, clone, send, rootDefinition) }
+
+          props.value = makeProxy(child, clone, send, rootDefinition);
+
+        }
+
+        else {
+          throw new Error("Wrong proxy definition at " + names.join('.') + " for \n"
+                        + JSON.stringify(rootDefinition, null, 1));
+        }
+
+        /* Define the properties for this */
+        Object.defineProperty(object, i, props);
+      })(i);
+    }
+
+    /* All done, return our object clone */
+    return object;
   }
 
   /**
@@ -743,10 +777,11 @@ Esquire.define('rodosha/proxy', ['defers/Promise'], function(Promise) {
    * @return {object} A **proxy** object to an instance from the {@link Worker}.
    */
   function buildProxy(proxy, server) {
-    var object = makeProxy(proxy.definition, [ proxy.id ], server.send);
+    var object = makeProxy(proxy.definition, [ proxy.id ], server.send, proxy.definition);
     return Object.defineProperty(object, "$$proxyId$$", {
       enumerable: false, configurable: false, value: proxy.id
     });
+    return object;
   }
 
   return Object.freeze({ buildProxy: buildProxy });
@@ -875,17 +910,27 @@ function(Promise, Deferred, messages, proxy) {
           var msgid = data.id;
           var deferred = pendingMessages[msgid];
           if (deferred) {
-            delete pendingMessages[msgid];
-            if (data.hasOwnProperty('proxy')) {
-              deferred.resolve(proxy.buildProxy(data.proxy, this));
-            } else if (data.hasOwnProperty('resolve')) {
-              deferred.resolve(data.resolve);
-            } else if (data.hasOwnProperty('reject')) {
-              if (debug) console.warn("Rejected message " + msgid, data);
-              deferred.reject(data.reject);
-            } else {
-              console.warn("Invalid message data " + msgid, data);
-              deferred.reject(new Error("Invalid message data"));
+            try {
+              delete pendingMessages[msgid];
+              if (data.hasOwnProperty('proxy')) {
+                deferred.resolve(proxy.buildProxy(data.proxy, this));
+              } else if (data.hasOwnProperty('resolve')) {
+                if (data.resolve === true) {
+                  if (data.undefined === true) deferred.resolve(undefined);
+                  else if (data.null === true) deferred.resolve(null);
+                  else deferred.resolve(true);
+                } else {
+                  deferred.resolve(data.resolve);
+                }
+              } else if (data.hasOwnProperty('reject')) {
+                if (debug) console.warn("Rejected message " + msgid, data);
+                deferred.reject(data.reject);
+              } else {
+                console.warn("Invalid message data " + msgid, data);
+                deferred.reject(new Error("Invalid message data"));
+              }
+            } catch(error) {
+              deferred.reject(error);
             }
           } else {
             console.error("Unknown message ID", msgid);
@@ -899,6 +944,7 @@ function(Promise, Deferred, messages, proxy) {
         if (! worker) return Promise.resolve();
         return this.send({close: true}).then(function(success) {
           server.terminate(new Error("Worker " + workerId + " closed"));
+          return success;
         });
       },
 
