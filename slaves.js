@@ -310,11 +310,12 @@ Esquire.define('slaves/messages', [], function messages() {
     var name = "RemoteError" + (error.name ? ("[" + error.name + "]") : "");
     Error.call(message);
 
-    Object.defineProperties(this, {
-      "message" : { enumerable: true, configurable: false, get:   function() { return message }},
-      "name" :    { enumerable: true, configurable: false, get:   function() { return name    }},
-      "toString": { enumerable: true, configurable: false, value: function() { return name + ": " + message }}
-    });
+    /* Inject properties */
+    this.message = message;
+    this.name = name;
+    this.toString = function() {
+      return name + ": " + message;
+    }
 
     /**
      * @member {string} stack The stack trace associated with this instance,
@@ -322,18 +323,20 @@ Esquire.define('slaves/messages', [], function messages() {
      * @memberof module:slave/messages~RemoteError
      * @instance
      */
-    if ((error.stack) || (this.stack)) {
-      var localStack = this.stack;
-      /* Setting "this.stack" won't work */
-      Object.defineProperty(this, 'stack', { enumerable: false, configurable: false, get: function() {
-        var stack = this.toString();
-        if (error.stack) stack += "\nRemote stack: " + error.stack;
-        if (localStack)  stack += "\nLocal stack:" + localStack;
-        return stack;
-      }});
+    var localStack = this.stack || new Error().stack;
+    if (localStack) localStack = localStack.replace(/^(Remote)?Error\n/, '');
+
+    if ((error.stack) || (localStack)) {
+      var stack = this.toString();
+      if (error.stack) stack += "\n- Remote stack:\n" + error.stack;
+      if (localStack)  stack += "\n- Local stack:\n"  + localStack;
+      this.stack = stack;
     }
+
   }
-  RemoteError.prototype = new Error;
+
+  RemoteError.prototype = Object.create(Error.prototype);
+  RemoteError.prototype.constructor = RemoteError;
   RemoteError.prototype.name = 'RemoteError';
 
   /* ======================================================================== */
@@ -388,6 +391,9 @@ Esquire.define('slaves/messages', [], function messages() {
 
     if (type === 'object') {
 
+      if (decoded instanceof ArrayBuffer) return decoded;
+      if (decoded.buffer instanceof ArrayBuffer) return decoded;
+
       /* Normal arrays */
       if (Array.isArray(decoded)) {
         return copy(decoded, [], stack, encode);
@@ -438,6 +444,9 @@ Esquire.define('slaves/messages', [], function messages() {
 
     if (type === 'object') {
 
+      if (encoded instanceof ArrayBuffer) return encoded;
+      if (encoded.buffer instanceof ArrayBuffer) return encoded;
+
       if (Array.isArray(encoded)) {
         return copy(encoded, [], stack, decode);
       }
@@ -474,7 +483,7 @@ Esquire.define('slaves/messages', [], function messages() {
  *
  * @module slaves/proxy
  */
-Esquire.define('slaves/proxy', ['promize'], function(promize) {
+Esquire.define('slaves/proxy', ['promize/Promise'], function(Promise) {
 
   /**
    * @class module:slaves/proxy.ProxyPromise
@@ -515,7 +524,7 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
       try {
         if (promise == null) promise = send(message);
       } catch (error) {
-        promise = promize.Promise.reject(error);
+        promise = Promise.reject(error);
       }
       /* Set up the promise's handlers */
       return promise.then(onSuccess, onFailure);
@@ -614,7 +623,8 @@ Esquire.define('slaves/proxy', ['promize'], function(promize) {
  *
  * @module slaves/servers
  */
-Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'], function(promize, messages, proxy) {
+Esquire.define('slaves/servers', ['promize/Promise', 'promize/Deferred' ,'slaves/messages' ,'slaves/proxy'],
+function(Promise, Deferred, messages, proxy) {
 
   /**
    * Create a new {@link module:slaves/servers.Server Server} instance wrapping
@@ -679,7 +689,7 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
         if (! worker) throw new Error("Worker " + workerId + " unavailable");
 
         /* Create and remember our deferred */
-        var deferred = new promize.Deferred();
+        var deferred = new Deferred();
 
         /* Encode and remember this message */
         message.id = lastMessageId ++;
@@ -748,7 +758,7 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
       /* -------------------------------------------------------------------- */
 
       close: function() {
-        if (! worker) return promize.Promise.resolve();
+        if (! worker) return Promise.resolve();
         return this.send({close: true}).then(function(success) {
           server.terminate(new Error("Worker " + workerId + " closed"));
         });
@@ -809,7 +819,7 @@ Esquire.define('slaves/servers', ['promize' ,'slaves/messages' ,'slaves/proxy'],
           );
         }
 
-        return promize.Promise.all(promises);
+        return Promise.all(promises);
       },
 
       proxy: function(module) {
@@ -935,7 +945,7 @@ Esquire.define('slaves/workers', ['$global/Worker', '$global/Blob', '$global/Blo
  *
  * @module slaves
  */
-Esquire.define('slaves', [ 'promize', 'slaves/servers', 'slaves/workers' ], function(promize, servers, workers) {
+Esquire.define('slaves', [ 'promize/Deferred', 'slaves/servers', 'slaves/workers' ], function(Deferred, servers, workers) {
 
   /**
    * Create a new {@link Slave} instance.
@@ -951,7 +961,7 @@ Esquire.define('slaves', [ 'promize', 'slaves/servers', 'slaves/workers' ], func
     while (workerId.length < 8) workerId = '0' + workerId;
 
     /* Our deferred for initialization */
-    var initialized = new promize.Deferred();
+    var initialized = new Deferred();
 
     /* Create our Blob URL */
     var script = [];
