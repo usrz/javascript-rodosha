@@ -46,6 +46,7 @@ module.exports = function(grunt) {
         options: {
           "plugins": ["plugins/markdown"],
           "templates": {
+            "windowTitle": "Rodosha v." + require('./package.json').version,
             "cleverLinks":    true,
             "monospaceLinks": true,
             "minify": false
