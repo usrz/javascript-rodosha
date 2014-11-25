@@ -1,6 +1,6 @@
 'use strict';
 
-esquire(['$esquire', '$global', 'rodosha', 'rodosha/messages'], function($esquire, $global, rodosha, messages) {
+esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], function($esquire, $global, Promise, rodosha, messages) {
 
   /* Run tests on Node */
   if (!('document' in $global)) $global.document = "fake";
