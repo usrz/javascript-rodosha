@@ -5,7 +5,7 @@
  *
  * @module rodosha
  */
-Esquire.define('rodosha', [ 'defers/Deferred', 'rodosha/servers', 'rodosha/workers' ], function(Deferred, servers, workers) {
+Esquire.define('rodosha', [ '$deferred', 'rodosha/servers', 'rodosha/workers' ], function(Deferred, servers, workers) {
 
   function dependencies(modules, moduleName) {
     var module = Esquire.module(moduleName);
@@ -65,7 +65,7 @@ Esquire.define('rodosha', [ 'defers/Deferred', 'rodosha/servers', 'rodosha/worke
     }
 
     /* Initialize the client */
-    script.push("new Esquire().require('rodosha/client').init(" + debug + ");\n");
+    script.push("new Esquire().require('rodosha/client').then(function(client) { client.init(" + debug + ") });\n");
 
     /* Dump our code for debugging */
     if (debug) {
@@ -149,8 +149,10 @@ Esquire.define('rodosha', [ 'defers/Deferred', 'rodosha/servers', 'rodosha/worke
 
     /* Error handler */
     server.worker.onerror = function(event) {
-      console.error("Worker[" + workerId + "] Uncaught exception", event.data);
-      initialized.reject(event);
+      console.error("Worker[" + workerId + "] Uncaught exception", event.message);
+      var error = new Error("Uncaught Worker error: " + event.message ? event.message : "[no message]");
+      error.event = event;
+      initialized.reject(error);
     }
 
     /* Message handler */

@@ -5,7 +5,7 @@
  *
  * @module rodosha/proxy
  */
-Esquire.define('rodosha/proxy', ['defers/Promise'], function(Promise) {
+Esquire.define('rodosha/proxy', ['$promise'], function(Promise) {
 var q = 0;
   /**
    * @class module:rodosha/proxy.ProxyPromise
