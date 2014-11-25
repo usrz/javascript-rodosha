@@ -18,8 +18,11 @@ module.exports = function(grunt) {
     'esquire-mocha': {
       'options': { slow: 500 },
       'default': {
-        src: [ 'index.js',
-               'test/*.js' ]
+        src: [
+          'index.js',
+          'test/messages.test.js',
+          'test/rodosha.test.js',
+          'test/node.test.js' ]
       }
     },
 

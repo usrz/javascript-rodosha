@@ -13,7 +13,8 @@ module.exports = function(config) {
     /* These need to be in order */
     files: [
       'src/**/*.js',
-      'test/**/*.js',
+      'test/messages.test.js',
+      'test/rodosha.test.js',
     ],
 
     /* Pretty */
