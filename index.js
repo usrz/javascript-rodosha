@@ -1,9 +1,7 @@
 'use strict';
 
-/* Load our dependencies */
+/* Load our required dependencies */
 var esquire = require('esquire');
-var defers = require('defers');
-
 var joinPath = require('path').join;
 var TmpFile = require('temporary').File;
 var childProcess = require('child_process');
@@ -23,7 +21,7 @@ process.on('exit', function() {
 });
 
 /* Emulate a web worker */
-Esquire.define("$global/Worker", [], function() {
+esquire.define("$global/Worker", [], function() {
   return function Worker(uri) {
     var child = childProcess.fork(uri);
     var worker = this;
@@ -42,7 +40,7 @@ Esquire.define("$global/Worker", [], function() {
 });
 
 /* Emulate a blob */
-Esquire.define("$global/Blob", [], function() {
+esquire.define("$global/Blob", [], function() {
   return function Blob(data) {
     if (data instanceof Array) data = data.join('');
     this.$$data$$ = data;
@@ -50,7 +48,7 @@ Esquire.define("$global/Blob", [], function() {
 });
 
 /* Emulate the URL.createObjectURL call */
-Esquire.define("$global/URL", ["$global/Blob"], function(Blob) {
+esquire.define("$global/URL", ["$global/Blob"], function(Blob) {
   return Object.freeze({
     createObjectURL: function(blob) {
       if (blob instanceof Blob) {
@@ -67,4 +65,14 @@ Esquire.define("$global/URL", ["$global/Blob"], function(Blob) {
   });
 });
 
-module.exports = esquire('rodosha');
+/* Our Rodosha promise */
+var promise = esquire('rodosha');
+
+module.exports = {
+  create: function() {
+    var args = arguments;
+    return promise.then(function(rodosha) {
+      return rodosha.create.apply(rodosha, args);
+    });
+  }
+};
