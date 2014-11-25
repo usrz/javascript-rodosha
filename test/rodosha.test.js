@@ -1,7 +1,6 @@
 'use strict';
 
-esquire(['$esquire', 'rodosha', 'defers/Promise', 'defers/Deferred', 'rodosha/messages', '$global'],
-function($esquire, rodosha, Promise, Deferred, messages, $global) {
+esquire(['$esquire', '$global', 'rodosha', 'rodosha/messages'], function($esquire, $global, rodosha, messages) {
 
   /* Run tests on Node */
   if (!('document' in $global)) $global.document = "fake";
@@ -9,106 +8,36 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
   /* Debug flag */
   var debug = false;
 
-  Esquire.define("module_a", function() { return "a-value"});
-
-  Esquire.define("module_b", ['$global'], function($global) {
-    return function() {
-      if ($global.document) {
-        throw new Error("module_b not running in worker");
-      } else {
-        return "b-value"
-      }
-    }
-  });
-
-  Esquire.define("module_c", ["module_a", "module_b", "defers/Deferred", "$global"], function(a, b, Deferred, $global) {
-    var array = [];
-    return {
-      prp_a: a,
-      fnc_b: b,
-      fnc_c: function(x) {
-        if ($global.document) {
-          throw new Error("module_c[fnc_c] not running in worker");
-        } else {
-          return [x, a, b()].join(' ');
-        }
-      },
-      fnc_d: function() {
-        return this.obj_d
-      },
-      obj_d: {
-        prp: null,
-        fnc: function(x) {
-          if ($global.document) {
-            throw new Error("module_c[obj_d][fnc] not running in worker");
-          } else {
-            var array = [b(), a, x];
-            if (this.prp) array.push(this.prp);
-            return array.join(' ');
-          }
-        }
-      },
-      arr_e: array,
-      fnc_f: function(x) {
-        if ($global.document) {
-          throw new Error("module_c[fnc_f] not running in worker");
-        } else {
-          this.arr_e.push(x);
-          return x;
-        }
-      },
-      fnc_g: function() {
-        throw new Error("This will always throw something");
-      },
-      fnc_h: function(success) {
-        var deferred = new Deferred();
-        $global.setTimeout(function() {
-          deferred.resolve(success);
-        }, 100);
-        return deferred.promise;
-      },
-      fnc_i: function(failure) {
-        var deferred = new Deferred();
-        $global.setTimeout(function() {
-          deferred.reject(new Error(failure));
-        }, 100);
-        return deferred.promise;
-      },
-      fnc_j: function(num) {
-        return "count " + num;
-      }
-    };
-  });
-
   /* ======================================================================== */
 
   describe("Rodosha", function() {
 
     /* A quick check to valdate our bloated object here */
-    it("should validate locally", function() {
-      var a = $esquire.require("module_a");
-      var b = $esquire.require("module_b");
-      var c = $esquire.require("module_c");
+    promises("should validate locally", function() {
 
-      expect(a).to.be.equal('a-value');
+      /* Create a new injector, don't pollute the static one! */
+      return new Esquire().inject(['module_a', 'module_b', 'module_c'], function(a, b, c) {
+        expect(a).to.be.equal('a-value');
 
-      expect(b).to.be.a('function');
-      expect(function() { b() }).to.throw(/^module_b not running in worker$/);
+        expect(b).to.be.a('function');
+        expect(function() { b() }).to.throw(/^module_b not running in worker$/);
 
-      expect(c.prp_a).to.be.equal(a);
-      expect(function() { c.fnc_c("hello") }).to.throw('module_c[fnc_c] not running in worker');
-      expect(function() { c.obj_d.fnc("world") }).to.throw('module_c[obj_d][fnc] not running in worker');
+        expect(c.prp_a).to.be.equal(a);
+        expect(function() { c.fnc_c("hello") }).to.throw('module_c[fnc_c] not running in worker');
+        expect(function() { c.obj_d.fnc("world") }).to.throw('module_c[obj_d][fnc] not running in worker');
 
-      expect(c.arr_e).to.be.deep.equal([]);
-      expect(function() { c.fnc_f("hello") }).to.throw('module_c[fnc_f] not running in worker');
+        expect(c.arr_e).to.be.deep.equal([]);
+        expect(function() { c.fnc_f("hello") }).to.throw('module_c[fnc_f] not running in worker');
+      })
     });
 
     /* ---------------------------------------------------------------------- */
 
     /* Create a proxy to a string (module_a) and check it */
-    it("should create proxy to a string", function(done) {
+    promises("should create proxy to a string", function() {
       var openRodosha;
-      rodosha.create(debug)
+
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -121,20 +50,15 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         return openRodosha.close();
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
     /* ---------------------------------------------------------------------- */
 
     /* Create a proxy to a function (module_b) and check it */
-    it("should create proxy to a function", function(done) {
+    promises("should create proxy to a function", function() {
       var openRodosha;
-      rodosha.create(debug)
+
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -151,22 +75,17 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         return openRodosha.close();
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
 
     /* ---------------------------------------------------------------------- */
 
     /* Create a proxy to a more complex object (module_c) and check it */
-    it("should create a proxy to an object", function(done) {
+    promises("should create a proxy to an object", function() {
 
       var openRodosha;
-      rodosha.create(debug)
+
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -204,19 +123,13 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         return openRodosha.close();
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
     /* ---------------------------------------------------------------------- */
 
-    it("should import a number of initial scripts", function(done) {
+    promises("should import a number of initial scripts", function() {
 
-      Promise.all([
+      return Promise.all([
         rodosha.create('module_a', debug).then(function(r) {
           expect(r.modules).to.include('module_a');
           return r.close();
@@ -238,22 +151,17 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         }),
       ])
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
     });
 
     /* ---------------------------------------------------------------------- */
 
     /* Create a proxy to a more complex object (module_c) and check it */
-    it("should create a proxy on-demand", function(done) {
+    promises("should create a proxy on-demand", function() {
 
       var openRodosha;
       var openProxy;
 
-      rodosha.create(debug)
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -280,26 +188,20 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         return openRodosha.close();
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
 
     /* ---------------------------------------------------------------------- */
 
     /* Make sure that arrays are cloned, not proxied like objects */
-    it("should ignore arrays proxying", function(done) {
+    promises("should ignore arrays proxying", function() {
 
       var openRodosha;
       var random = Math.floor(Math.random() * 0x0FFFFFFFF);
       var rproxy = null;
       var rarray = null;
 
-      rodosha.create(debug)
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -336,22 +238,16 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         return openRodosha.close();
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
     /* ---------------------------------------------------------------------- */
 
-    it("should correctly set remote values", function(done) {
+    promises("should correctly set remote values", function() {
 
       var random = Math.floor(Math.random() * 0x0FFFFFFFF);
       var openRodosha;
 
-      rodosha.create(debug)
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -396,21 +292,16 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         return openRodosha.close();
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
     /* ---------------------------------------------------------------------- */
 
     /* Make sure that exceptions are properly propagated from the worker */
-    it("should correctly reject exceptions", function(done) {
+    promises("should correctly reject exceptions", function() {
 
       var openRodosha;
-      rodosha.create(debug)
+
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -429,21 +320,15 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         return openRodosha.close();
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
     /* ---------------------------------------------------------------------- */
 
-    it("should resolve a remote resolved promise", function(done) {
+    promises("should resolve a remote resolved promise", function() {
 
       var result = "This should be thrown: " + Math.floor(Math.random() * 0x0FFFFFFFF);
 
-      rodosha.create(debug)
+      return rodosha.create(debug)
 
       .then(function(instance) {
         return instance.proxy("module_c");
@@ -457,22 +342,16 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         expect(success).to.be.equal(result);
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
     /* ---------------------------------------------------------------------- */
 
-    it("should reject a remote rejected promise", function(done) {
+    promises("should reject a remote rejected promise", function() {
 
       var result = "This should be good: " + Math.floor(Math.random() * 0x0FFFFFFFF);
       var openRodosha;
 
-      rodosha.create(debug)
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -491,22 +370,16 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         return openRodosha.close();
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
     /* ---------------------------------------------------------------------- */
 
-    it("should destroy a remote proxy", function(done) {
+    promises("should destroy a remote proxy", function() {
 
       var openRodosha;
       var openProxy;
 
-      rodosha.create(debug)
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -530,25 +403,19 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         return openRodosha.close();
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
     /* ---------------------------------------------------------------------- */
 
     /* Simple timings for a number of messages (skip on debug) */
-    var itx = function() { return (debug ? it.skip : it).apply(null, arguments) }
-    itx("should validate performance", function(done) {
+    var skip_on_debug = function() { return (debug ? promises.skip : promises).apply(null, arguments) }
+    skip_on_debug("should validate performance", function() {
 
       var start = new Date().getTime();
       var count = 1000;
       var openRodosha;
 
-      rodosha.create(debug)
+      return rodosha.create(debug)
 
       .then(function(instance) {
         var now = new Date().getTime();
@@ -594,9 +461,6 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
       .then(function(results) {
         var now = new Date().getTime();
         console.log("Closed in " + (now - start) + " ms");
-        done();
-      }, function(failure) {
-        done(failure);
       });
 
     });
@@ -604,12 +468,12 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
     /* ---------------------------------------------------------------------- */
 
     /* Make sure that close will gracefully close the worker */
-    it("should close successfully", function(done) {
+    promises("should close successfully", function() {
 
       var openRodosha;
       var openProxy;
 
-      rodosha.create(debug)
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -638,23 +502,17 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         expect(failure.message).to.match(/Worker \w+ unavailable/);
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
     /* ---------------------------------------------------------------------- */
 
     /* Make sure that close will gracefully close the worker */
-    it("should terminate immediately", function(done) {
+    promises("should terminate immediately", function() {
 
       var termination = new Error("Terminated foolishly");
       var openRodosha;
 
-      rodosha.create(debug)
+      return rodosha.create(debug)
 
       .then(function(instance) {
         openRodosha = instance;
@@ -673,13 +531,83 @@ function($esquire, rodosha, Promise, Deferred, messages, $global) {
         expect(failure).to.be.equal(termination);
       })
 
-      .then(function(success) {
-        done();
-      }, function(failure) {
-        done(failure);
-      })
-
     });
 
   });
 });
+
+/* ========================================================================== */
+/* TEST MODULES DEFINITION                                                    */
+/* ========================================================================== */
+
+Esquire.define("module_a", function() { return "a-value"});
+
+Esquire.define("module_b", ['$global'], function($global) {
+  return function() {
+    if ($global.document) {
+      throw new Error("module_b not running in worker");
+    } else {
+      return "b-value"
+    }
+  }
+});
+
+Esquire.define("module_c", ["module_a", "module_b", "$deferred", "$global"], function(a, b, Deferred, $global) {
+  var array = [];
+  return {
+    prp_a: a,
+    fnc_b: b,
+    fnc_c: function(x) {
+      if ($global.document) {
+        throw new Error("module_c[fnc_c] not running in worker");
+      } else {
+        return [x, a, b()].join(' ');
+      }
+    },
+    fnc_d: function() {
+      return this.obj_d
+    },
+    obj_d: {
+      prp: null,
+      fnc: function(x) {
+        if ($global.document) {
+          throw new Error("module_c[obj_d][fnc] not running in worker");
+        } else {
+          var array = [b(), a, x];
+          if (this.prp) array.push(this.prp);
+          return array.join(' ');
+        }
+      }
+    },
+    arr_e: array,
+    fnc_f: function(x) {
+      if ($global.document) {
+        throw new Error("module_c[fnc_f] not running in worker");
+      } else {
+        this.arr_e.push(x);
+        return x;
+      }
+    },
+    fnc_g: function() {
+      throw new Error("This will always throw something");
+    },
+    fnc_h: function(success) {
+      var deferred = new Deferred();
+      $global.setTimeout(function() {
+        deferred.resolve(success);
+      }, 100);
+      return deferred.promise;
+    },
+    fnc_i: function(failure) {
+      var deferred = new Deferred();
+      $global.setTimeout(function() {
+        deferred.reject(new Error(failure));
+      }, 100);
+      return deferred.promise;
+    },
+    fnc_j: function(num) {
+      return "count " + num;
+    }
+  };
+});
+
