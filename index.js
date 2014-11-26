@@ -7,10 +7,7 @@ var TmpFile = require('temporary').File;
 var childProcess = require('child_process');
 
 /* Load our sources */
-var path = joinPath(__dirname, "src");
-require("fs").readdirSync(path).forEach(function(file) {
-  require("./src/" + file);
-});
+esquire.load('src/**/*.js', module);
 
 /* Files to delete */
 var tempFiles = [];
