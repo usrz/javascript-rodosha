@@ -16,18 +16,18 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
     promises("should validate locally", function() {
 
       /* Create a new injector, don't pollute the static one! */
-      return new Esquire().inject(['module_a', 'module_b', 'module_c'], function(a, b, c) {
+      return new Esquire().inject(['test/module_a', 'test/module_b', 'test/module_c'], function(a, b, c) {
         expect(a).to.be.equal('a-value');
 
         expect(b).to.be.a('function');
-        expect(function() { b() }).to.throw(/^module_b not running in worker$/);
+        expect(function() { b() }).to.throw(/^test\/module_b not running in worker$/);
 
         expect(c.prp_a).to.be.equal(a);
-        expect(function() { c.fnc_c("hello") }).to.throw('module_c[fnc_c] not running in worker');
-        expect(function() { c.obj_d.fnc("world") }).to.throw('module_c[obj_d][fnc] not running in worker');
+        expect(function() { c.fnc_c("hello") }).to.throw('test/module_c[fnc_c] not running in worker');
+        expect(function() { c.obj_d.fnc("world") }).to.throw('test/module_c[obj_d][fnc] not running in worker');
 
         expect(c.arr_e).to.be.deep.equal([]);
-        expect(function() { c.fnc_f("hello") }).to.throw('module_c[fnc_f] not running in worker');
+        expect(function() { c.fnc_f("hello") }).to.throw('test/module_c[fnc_f] not running in worker');
       })
     });
 
@@ -41,7 +41,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_a");
+        return instance.proxy("test/module_a");
       })
 
       .then(function(proxy) {
@@ -62,7 +62,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_b");
+        return instance.proxy("test/module_b");
       })
 
       .then(function(proxy) {
@@ -89,7 +89,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_c");
+        return instance.proxy("test/module_c");
       })
 
       .then(function(proxy) {
@@ -130,23 +130,23 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
     promises("should import a number of initial scripts", function() {
 
       return Promise.all([
-        rodosha.create('module_a', debug).then(function(r) {
-          expect(r.modules).to.include('module_a');
+        rodosha.create('test/module_a', debug).then(function(r) {
+          expect(r.modules).to.include('test/module_a');
           return r.close();
         }),
-        rodosha.create('module_b', debug).then(function(r) {
-          expect(r.modules).to.include('module_b');
+        rodosha.create('test/module_b', debug).then(function(r) {
+          expect(r.modules).to.include('test/module_b');
           return r.close();
         }),
-        rodosha.create('module_a', 'module_b', debug).then(function(r) {
-          expect(r.modules).to.include('module_a');
-          expect(r.modules).to.include('module_b');
+        rodosha.create('test/module_a', 'test/module_b', debug).then(function(r) {
+          expect(r.modules).to.include('test/module_a');
+          expect(r.modules).to.include('test/module_b');
           return r.close();
         }),
-        rodosha.create('module_c', debug).then(function(r) {
-          expect(r.modules).to.include('module_a');
-          expect(r.modules).to.include('module_b');
-          expect(r.modules).to.include('module_c');
+        rodosha.create('test/module_c', debug).then(function(r) {
+          expect(r.modules).to.include('test/module_a');
+          expect(r.modules).to.include('test/module_b');
+          expect(r.modules).to.include('test/module_c');
           return r.close();
         }),
       ])
@@ -165,7 +165,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_c");
+        return instance.proxy("test/module_c");
       })
 
       .then(function(proxy) {
@@ -205,7 +205,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_c");
+        return instance.proxy("test/module_c");
       })
 
       .then(function(proxy) {
@@ -251,7 +251,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_c");
+        return instance.proxy("test/module_c");
       })
 
       .then(function(proxy) {
@@ -305,7 +305,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_c");
+        return instance.proxy("test/module_c");
       })
 
       .then(function(proxy) {
@@ -331,7 +331,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
       return rodosha.create(debug)
 
       .then(function(instance) {
-        return instance.proxy("module_c");
+        return instance.proxy("test/module_c");
       })
 
       .then(function(proxy) {
@@ -355,7 +355,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_c");
+        return instance.proxy("test/module_c");
       })
 
       .then(function(proxy) {
@@ -383,7 +383,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_c");
+        return instance.proxy("test/module_c");
       })
 
       .then(function(proxy) {
@@ -423,7 +423,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
         openRodosha = instance;
 
-        var promise = instance.proxy("module_c");
+        var promise = instance.proxy("test/module_c");
         start = new Date().getTime();
         return promise;
       })
@@ -477,7 +477,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_b");
+        return instance.proxy("test/module_b");
       })
 
       .then(function(proxy) {
@@ -516,7 +516,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(instance) {
         openRodosha = instance;
-        return instance.proxy("module_b");
+        return instance.proxy("test/module_b");
       })
 
       .then(function(proxy) {
@@ -540,26 +540,26 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 /* TEST MODULES DEFINITION                                                    */
 /* ========================================================================== */
 
-Esquire.define("module_a", function() { return "a-value"});
+Esquire.define("test/module_a", function() { return "a-value"});
 
-Esquire.define("module_b", ['$global'], function($global) {
+Esquire.define("test/module_b", ['$global'], function($global) {
   return function() {
     if ($global.document) {
-      throw new Error("module_b not running in worker");
+      throw new Error("test/module_b not running in worker");
     } else {
       return "b-value"
     }
   }
 });
 
-Esquire.define("module_c", ["module_a", "module_b", "$deferred", "$global"], function(a, b, Deferred, $global) {
+Esquire.define("test/module_c", ["test/module_a", "test/module_b", "$deferred", "$global"], function(a, b, Deferred, $global) {
   var array = [];
   return {
     prp_a: a,
     fnc_b: b,
     fnc_c: function(x) {
       if ($global.document) {
-        throw new Error("module_c[fnc_c] not running in worker");
+        throw new Error("test/module_c[fnc_c] not running in worker");
       } else {
         return [x, a, b()].join(' ');
       }
@@ -571,7 +571,7 @@ Esquire.define("module_c", ["module_a", "module_b", "$deferred", "$global"], fun
       prp: null,
       fnc: function(x) {
         if ($global.document) {
-          throw new Error("module_c[obj_d][fnc] not running in worker");
+          throw new Error("test/module_c[obj_d][fnc] not running in worker");
         } else {
           var array = [b(), a, x];
           if (this.prp) array.push(this.prp);
@@ -582,7 +582,7 @@ Esquire.define("module_c", ["module_a", "module_b", "$deferred", "$global"], fun
     arr_e: array,
     fnc_f: function(x) {
       if ($global.document) {
-        throw new Error("module_c[fnc_f] not running in worker");
+        throw new Error("test/module_c[fnc_f] not running in worker");
       } else {
         this.arr_e.push(x);
         return x;
