@@ -88,6 +88,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       types.test_object({string: 'hello', number: 123, nan: NaN});
       types.test_array([1,'two',3,'four']);
       types.test_date(new Date());
+      types.test_regexp(/^hello world$/gi);
     });
 
     /* ====================================================================== */
@@ -162,6 +163,15 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Date);
         expect(result).to.be.deep.equal(date);
+      })
+    })
+
+    promises("should validate regular expressions", function() {
+      return proxy.then(function(types) {
+        return types.test_regexp(/^hello, world$/gi);
+      }).then(function(result) {
+        expect(result).to.be.instanceof(RegExp);
+        expect(result).to.be.deep.equal(/^hello, world$/gi);
       })
     })
 
@@ -472,7 +482,7 @@ Esquire.define('test/types', function() {
       } else if (param.prototype && param.prototype.constructor && param.prototype.constructor.name) {
         details = "object[" + param.prototype.constructor.name + "] ==>\n" + JSON.stringify(param, null, 2);
       } else {
-        details = "object ==>\n" + JSON.stringify(param, null, 2);
+        details = "object ==> '" + param + "'\n" + JSON.stringify(param, null, 2);
       }
     } else {
       details = typeof(param) + " -> " + param + " <-";
@@ -514,6 +524,10 @@ Esquire.define('test/types', function() {
     test_date: function(param) {
       if (param instanceof Date) return param;
       throw new Failure("Should be a Date", param);
+    },
+    test_regexp: function(param) {
+      if (param instanceof RegExp) return param;
+      throw new Failure("Should be a RegExp", param);
     },
     /* ---------------------------------------------------------------------- */
     test_ArrayBuffer: function(param) {

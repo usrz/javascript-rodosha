@@ -44,6 +44,11 @@ function messages(process,
     return { "__$$native$$__" : { "Date" : date.getTime() }};
   }
 
+  function transferRegExp(expr) {
+    if (nativeTransfers) return expr;
+    return { "__$$native$$__" : { "RegExp" : expr.toString() }};
+  }
+
   /* ======================================================================== */
   /* ARRAY BUFFERS                                                            */
   /* ======================================================================== */
@@ -82,7 +87,8 @@ function messages(process,
     /* Basics */
     if (object === 'undefined') return undefined;
     if (object === 'NaN') return NaN;
-    if (object['Date']) return new Date(object['Date']);
+    if (object['Date'])   return new Date(object['Date']);
+    if (object['RegExp']) return eval(object['RegExp']);
 
     if (object['ArrayBuffer'       ]) return                       decodeArrayBuffer(object['ArrayBuffer'       ]);
 
@@ -252,19 +258,10 @@ function messages(process,
 
     if (type === 'object') {
 
-      /* ArrayBuffers and their views */
+      /* ArrayBuffers, views, dates, regular expressions, ... */
       if (isBufferOrView(decoded)) return encodeBufferOrView(decoded);
-
-      /* Normal arrays */
-      if (Array.isArray(decoded)) return copy(decoded, [], stack, encode);
-
-      /* Dates */
       if (decoded instanceof Date) return transferDate(decoded);
-
-      /* Arguments array */
-      if (decoded.hasOwnProperty('callee') && (typeof(arguments.length) === 'number')) {
-        return copy(decoded, [], stack, encode);
-      }
+      if (decoded instanceof RegExp) return transferRegExp(decoded);
 
       /* Error object */
       if (decoded instanceof Error) {
@@ -276,6 +273,12 @@ function messages(process,
         if (message) error.message = message;
         if (stack) error.stack = stack;
         return { "__$$error$$__": error };
+      }
+
+      /* Normal arrays and arrays from arguments calls */
+      if ((decoded.hasOwnProperty('callee') && (typeof(decoded.length) === 'number'))
+          || Array.isArray(decoded)) {
+        return copy(decoded, [], stack, encode);
       }
 
       /* Other (normal) object */
@@ -307,20 +310,10 @@ function messages(process,
 
     if (type === 'object') {
 
-      /* Native transfer of ArrayBuffer(s) and views */
-      if (isBufferOrView(encoded)) {
-        return encoded;
-      }
-
-      /* Arrays */
-      if (Array.isArray(encoded)) {
-        return copy(encoded, [], stack, decode);
-      }
-
-      /* Dates */
-      if (encoded instanceof Date) {
-        return encoded;
-      }
+      /* Native transfer of ArrayBuffer(s), views, dates, regular expressions */
+      if (isBufferOrView(encoded)) return encoded;
+      if (encoded instanceof Date) return encoded;
+      if (encoded instanceof RegExp) return encoded;
 
       /* Errors */
       if (encoded["__$$error$$__"] != null) {
@@ -328,19 +321,17 @@ function messages(process,
       }
 
       /* Functions */
-      else if (encoded["__$$function$$__"] != null) {
+      if (encoded["__$$function$$__"] != null) {
         return eval('(' + encoded["__$$function$$__"] + ')');
       }
 
       /* Native transfers */
-      else if (encoded["__$$native$$__"] != null) {
+      if (encoded["__$$native$$__"] != null) {
         return receiveNative(encoded["__$$native$$__"]);
       }
 
-      /* Other (normal) object */
-      else {
-        return copy(encoded, {}, stack, decode);
-      }
+      /* Other (normal) object and arrays */
+      return copy(encoded, encoded, stack, decode);
     }
 
     throw new TypeError("Error decoding " + type + ": " + JSON.stringify(encoded));
