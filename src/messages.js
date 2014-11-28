@@ -6,7 +6,136 @@
  *
  * @module rodosha/messages
  */
-Esquire.define('rodosha/messages', [], function messages() {
+Esquire.define('rodosha/messages', [ '$global/process',
+                                     '$global/Buffer',
+                                     '$global/ArrayBuffer',
+                                     '$global/DataView',
+                                     '$global/Int8Array',
+                                     '$global/Uint8Array',
+                                     '$global/Int16Array',
+                                     '$global/Uint16Array',
+                                     '$global/Int32Array',
+                                     '$global/Uint32Array',
+                                     '$global/Float32Array',
+                                     '$global/Uint8ClampedArray',
+                                     '$global/Float64Array' ],
+function messages(process,
+                  Buffer,
+                  ArrayBuffer,
+                  DataView,
+                  Int8Array,
+                  Uint8Array,
+                  Int16Array,
+                  Uint16Array,
+                  Int32Array,
+                  Uint32Array,
+                  Float32Array,
+                  Uint8ClampedArray,
+                  Float64Array) {
+
+  /* Node.JS has "process", PhantomJS does not have ArrayBuffer.isView */
+  var nativeTransfers = ((process == null) && (ArrayBuffer.isView != null));
+
+  var transferableUndefined  = nativeTransfers ? undefined : { "__$$native$$__" : "undefined" };
+  var transferableNotANumber = nativeTransfers ? NaN       : { "__$$native$$__" : "NaN"       };
+
+  function transferDate(date) {
+    if (nativeTransfers) return date;
+    return { "__$$native$$__" : { "Date" : date.getTime() }};
+  }
+
+  /* ======================================================================== */
+  /* ARRAY BUFFERS                                                            */
+  /* ======================================================================== */
+
+  function decodeArrayBuffer(array) {
+
+    /* Speedup on Node.JS using native BASE64 */
+    if (process && Buffer && (array['__$$base64$$__'] != null)) {
+      return new Uint8Array(new Buffer(array['__$$base64$$__'], 'base64')).buffer
+    }
+
+    /* Normal array processing */
+    return new Uint8Array(array).buffer;
+  }
+
+  function encodeArrayBuffer(view) {
+    /* Always transfer as bytes, with floats we might get NaNs */
+    if (!(view instanceof Uint8Array)) {
+      view = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
+    }
+
+    /* Speedup on Node.JS using native BASE64 */
+    if (process && Buffer) {
+      return { "__$$base64$$__": new Buffer(view).toString('base64') };
+    }
+
+    /* Convert the bytes into an array */
+    var array = new Array(view.length);
+    for (var i = 0; i < view.length; i ++)
+      array[i] = view[i];
+    return array;
+  }
+
+
+  function receiveNative(object) {
+    /* Basics */
+    if (object === 'undefined') return undefined;
+    if (object === 'NaN') return NaN;
+    if (object['Date']) return new Date(object['Date']);
+
+    if (object['ArrayBuffer'       ]) return                       decodeArrayBuffer(object['ArrayBuffer'       ]);
+
+    if (object['Int8Array'         ]) return new Int8Array        (decodeArrayBuffer(object['Int8Array'         ]));
+    if (object['Uint8Array'        ]) return new Uint8Array       (decodeArrayBuffer(object['Uint8Array'        ]));
+    if (object['Int16Array'        ]) return new Int16Array       (decodeArrayBuffer(object['Int16Array'        ]));
+    if (object['Uint16Array'       ]) return new Uint16Array      (decodeArrayBuffer(object['Uint16Array'       ]));
+    if (object['Int32Array'        ]) return new Int32Array       (decodeArrayBuffer(object['Int32Array'        ]));
+    if (object['Uint32Array'       ]) return new Uint32Array      (decodeArrayBuffer(object['Uint32Array'       ]));
+    if (object['Float32Array'      ]) return new Float32Array     (decodeArrayBuffer(object['Float32Array'      ]));
+    if (object['Uint8ClampedArray' ]) return new Uint8ClampedArray(decodeArrayBuffer(object['Uint8ClampedArray' ]));
+    if (object['Float64Array'      ]) return new Float64Array     (decodeArrayBuffer(object['Float64Array'      ]));
+
+    throw new Error("Unknown native object " + JSON.stringify(object));
+  }
+
+  function encodeBufferOrView(decoded) {
+    if (nativeTransfers) return decoded;
+
+    if (decoded instanceof ArrayBuffer)       return { "__$$native$$__": { "ArrayBuffer"       : encodeArrayBuffer(new Uint8Array(decoded)) }};
+    if (decoded instanceof Int8Array)         return { "__$$native$$__": { "Int8Array"         : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Uint8Array)        return { "__$$native$$__": { "Uint8Array"        : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Int16Array)        return { "__$$native$$__": { "Int16Array"        : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Uint16Array)       return { "__$$native$$__": { "Uint16Array"       : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Int32Array)        return { "__$$native$$__": { "Int32Array"        : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Uint32Array)       return { "__$$native$$__": { "Uint32Array"       : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Float32Array)      return { "__$$native$$__": { "Float32Array"      : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Uint8ClampedArray) return { "__$$native$$__": { "Uint8ClampedArray" : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Float64Array)      return { "__$$native$$__": { "Float64Array"      : encodeArrayBuffer(decoded) }};
+
+    throw new Error("Unable to encode ArrayBuffer or TypedArray (wrong type)");
+
+  }
+
+  function isBufferOrView(object) {
+    if (object instanceof ArrayBuffer) return true;
+    if (ArrayBuffer.isView) return ArrayBuffer.isView(object);
+
+    /* No "ArrayBuffer.isView()", basically Node or PhantomJS */
+    if (DataView          && (object instanceof DataView         )) return true;
+    if (Int8Array         && (object instanceof Int8Array        )) return true;
+    if (Uint8Array        && (object instanceof Uint8Array       )) return true;
+    if (Int16Array        && (object instanceof Int16Array       )) return true;
+    if (Uint16Array       && (object instanceof Uint16Array      )) return true;
+    if (Int32Array        && (object instanceof Int32Array       )) return true;
+    if (Uint32Array       && (object instanceof Uint32Array      )) return true;
+    if (Float32Array      && (object instanceof Float32Array     )) return true;
+    if (Uint8ClampedArray && (object instanceof Uint8ClampedArray)) return true;
+    if (Float64Array      && (object instanceof Float64Array     )) return true;
+    return false;
+  }
+
+  /* ======================================================================== */
 
   /**
    * @classdesc An {@link Error} received from or sent to a {@link Worker}.
@@ -53,6 +182,19 @@ Esquire.define('rodosha/messages', [], function messages() {
 
   /* ======================================================================== */
 
+  function toUint8Array(object) {
+    if (object instanceof Uint8Array) return object;
+    if (Array.isArray(object)) return new Uint8Array(object);
+    if (('byteOffset' in object) && ('byteLength' in object)) {
+      var array = new Array(object.byteLength);
+      for (var i = 0; i < object.byteLength; i++) {
+        array[i] = object[i + object.byteOffset];
+      }
+      return new Uint8Array(array);
+    }
+    throw new Error("Unable to create Uint8Array");
+  }
+
   /*
    * Copy a source object onto a target, making sure we don't loop, and
    * encoding or decoding all of its members
@@ -91,33 +233,41 @@ Esquire.define('rodosha/messages', [], function messages() {
   function encode(decoded, stack) {
     if (!stack) stack = [];
 
-    if (decoded === undefined) return undefined;
+    if (decoded === undefined) return transferableUndefined;
     if (decoded === null) return null;
 
     var type = typeof(decoded);
-    if (type === 'undefined') return undefined;
+
     if (type === 'boolean') return decoded;
-    if (type === 'number') return decoded;
     if (type === 'string') return decoded;
     if (type === 'function') return { "__$$function$$__": decoded.toString() };
 
+    if (type === 'number') {
+      if (isNaN(decoded)) {
+        return transferableNotANumber;
+      } else {
+        return decoded;
+      }
+    }
+
     if (type === 'object') {
 
-      if (decoded instanceof ArrayBuffer) return decoded;
-      if (decoded.buffer instanceof ArrayBuffer) return decoded;
+      /* ArrayBuffers and their views */
+      if (isBufferOrView(decoded)) return encodeBufferOrView(decoded);
 
       /* Normal arrays */
-      if (Array.isArray(decoded)) {
-        return copy(decoded, [], stack, encode);
-      }
+      if (Array.isArray(decoded)) return copy(decoded, [], stack, encode);
+
+      /* Dates */
+      if (decoded instanceof Date) return transferDate(decoded);
 
       /* Arguments array */
-      else if (decoded.hasOwnProperty('callee') && (typeof(arguments.length) === 'number')) {
+      if (decoded.hasOwnProperty('callee') && (typeof(arguments.length) === 'number')) {
         return copy(decoded, [], stack, encode);
       }
 
       /* Error object */
-      else if (decoded instanceof Error) {
+      if (decoded instanceof Error) {
         var name = decoded.name || Object.getPrototypeOf(decoded).name;
         var message = decoded.message;
         var stack = decoded.stack;
@@ -129,10 +279,11 @@ Esquire.define('rodosha/messages', [], function messages() {
       }
 
       /* Other (normal) object */
-      else return copy(decoded, {}, stack, encode);
+      return copy(decoded, {}, stack, encode);
 
     }
-    return { "__$$typeof$$__": type };
+
+    throw new Error("Unable to transfer " + type);
   };
 
   /**
@@ -149,26 +300,41 @@ Esquire.define('rodosha/messages', [], function messages() {
     if (encoded === null) return null;
 
     var type = typeof(encoded);
-    if (type === 'undefined') return undefined;
+
     if (type === 'boolean') return encoded;
     if (type === 'number') return encoded;
     if (type === 'string') return encoded;
 
     if (type === 'object') {
 
-      if (encoded instanceof ArrayBuffer) return encoded;
-      if (encoded.buffer instanceof ArrayBuffer) return encoded;
+      /* Native transfer of ArrayBuffer(s) and views */
+      if (isBufferOrView(encoded)) {
+        return encoded;
+      }
 
+      /* Arrays */
       if (Array.isArray(encoded)) {
         return copy(encoded, [], stack, decode);
       }
 
-      else if (encoded["__$$error$$__"] != null) {
+      /* Dates */
+      if (encoded instanceof Date) {
+        return encoded;
+      }
+
+      /* Errors */
+      if (encoded["__$$error$$__"] != null) {
         return new RemoteError(encoded["__$$error$$__"]);
       }
 
+      /* Functions */
       else if (encoded["__$$function$$__"] != null) {
         return eval('(' + encoded["__$$function$$__"] + ')');
+      }
+
+      /* Native transfers */
+      else if (encoded["__$$native$$__"] != null) {
+        return receiveNative(encoded["__$$native$$__"]);
       }
 
       /* Other (normal) object */
@@ -182,6 +348,7 @@ Esquire.define('rodosha/messages', [], function messages() {
 
   return Object.freeze({
     RemoteError: RemoteError,
+    nativeTransfers: nativeTransfers,
     encode: encode,
     decode: decode
   });

@@ -8,6 +8,10 @@ esquire(['rodosha/messages'], function(messages) {
 
   var hasStack = new Error().stack && true || false;
 
+  var nativeTransfers = messages.nativeTransfers;
+  var transferableUndefined  = nativeTransfers ? undefined : { "__$$native$$__" : "undefined" };
+  var transferableNotANumber = nativeTransfers ? NaN       : { "__$$native$$__" : "NaN"       };
+
   describe("Messages", function() {
     it("should encode a basic object", function() {
       var args;
@@ -20,6 +24,7 @@ esquire(['rodosha/messages'], function(messages) {
         "_true":      true,
         "_false":     false,
         "_number":    123.456,
+        "_nan":       NaN,
         "_string":    "Hello, world",
         "_array":     ["zero", 1],
         "_object":    { a: 1, b: "two"},
@@ -35,17 +40,19 @@ esquire(['rodosha/messages'], function(messages) {
       expect(encoded.hasOwnProperty("_true"     )).to.equal(true);
       expect(encoded.hasOwnProperty("_false"    )).to.equal(true);
       expect(encoded.hasOwnProperty("_number"   )).to.equal(true);
+      expect(encoded.hasOwnProperty("_nan"      )).to.equal(true);
       expect(encoded.hasOwnProperty("_string"   )).to.equal(true);
       expect(encoded.hasOwnProperty("_array"    )).to.equal(true);
       expect(encoded.hasOwnProperty("_object"   )).to.equal(true);
       expect(encoded.hasOwnProperty("_function" )).to.equal(true);
       expect(encoded.hasOwnProperty("_arguments")).to.equal(true);
 
-      expect(encoded["_undefined"]).to.equal(undefined);
+      expect(encoded["_undefined"]).to.deep.equal(transferableUndefined);
       expect(encoded["_null"     ]).to.equal(null);
       expect(encoded["_true"     ]).to.equal(true);
       expect(encoded["_false"    ]).to.equal(false);
       expect(encoded["_number"   ]).to.equal(123.456);
+      expect(encoded["_nan"      ]).to.deep.equal(transferableNotANumber);
       expect(encoded["_string"   ]).to.equal("Hello, world");
       expect(encoded["_array"    ]).to.deep.equal(["zero", 1]);
       expect(encoded["_object"   ]).to.deep.equal({a: 1, b: "two"});
@@ -79,11 +86,12 @@ esquire(['rodosha/messages'], function(messages) {
       (function() { args = arguments })('argument0', 1);
 
       var object = {
-        "_undefined": undefined,
+        "_undefined": transferableUndefined,
         "_null":      null,
         "_true":      true,
         "_false":     false,
         "_number":    123.456,
+        "_nan":       transferableNotANumber,
         "_string":    "Hello, world",
         "_array":     ["zero", 1],
         "_object":    { a: 1, b: "two"},
@@ -98,6 +106,7 @@ esquire(['rodosha/messages'], function(messages) {
       expect(decoded.hasOwnProperty("_true"     )).to.equal(true);
       expect(decoded.hasOwnProperty("_false"    )).to.equal(true);
       expect(decoded.hasOwnProperty("_number"   )).to.equal(true);
+      expect(decoded.hasOwnProperty("_nan"      )).to.equal(true);
       expect(decoded.hasOwnProperty("_string"   )).to.equal(true);
       expect(decoded.hasOwnProperty("_array"    )).to.equal(true);
       expect(decoded.hasOwnProperty("_object"   )).to.equal(true);
@@ -108,6 +117,7 @@ esquire(['rodosha/messages'], function(messages) {
       expect(decoded["_true"     ]).to.equal(true);
       expect(decoded["_false"    ]).to.equal(false);
       expect(decoded["_number"   ]).to.equal(123.456);
+      expect(decoded["_nan"      ]).to.deep.equal(NaN);
       expect(decoded["_string"   ]).to.equal("Hello, world");
       expect(decoded["_array"    ]).to.deep.equal(["zero", 1]);
       expect(decoded["_object"   ]).to.deep.equal({a: 1, b: "two"});
@@ -131,8 +141,8 @@ esquire(['rodosha/messages'], function(messages) {
       var decoded = decode(encoded);
       expect(decoded.id).to.equal(123);
       expect(decoded.define).to.exist;
-      expect(decoded.define.name).to.equal('rodosha/messages');
-      expect(decoded.define.dependencies).to.deep.equal([]);
+      expect(decoded.define.name).to.equal(module.name);
+      expect(decoded.define.dependencies).to.deep.equal(module.dependencies);
       expect(decoded.define.constructor.toString()).to.equal(module.constructor.toString());
     });
 

@@ -15,6 +15,7 @@ module.exports = function(config) {
       'src/**/*.js',
       'test/messages.test.js',
       'test/rodosha.test.js',
+      'test/types.test.js',
     ],
 
     /* Pretty */

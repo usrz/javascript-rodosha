@@ -22,6 +22,7 @@ module.exports = function(grunt) {
           'index.js',
           'test/messages.test.js',
           'test/rodosha.test.js',
+          'test/types.test.js',
           'test/node.test.js' ]
       }
     },
