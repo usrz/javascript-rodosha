@@ -143,7 +143,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
             console.debug("Module '" + module.name + "' defined successfully");
             Esquire.define(module);
           }
-          message.accept(Esquire.module(module.name).name);
+          message.accept(module.name);
         }
 
         /* Proxy object request */

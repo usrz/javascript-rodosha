@@ -126,7 +126,7 @@ esquire(['rodosha/messages'], function(messages) {
     });
 
     it("should encode and decode a module", function() {
-      var module = Esquire.module('rodosha/messages');
+      var module = Esquire.modules['rodosha/messages'];
       var encoded = encode({id: 123, define: module});
       var decoded = decode(encoded);
       expect(decoded.id).to.equal(123);

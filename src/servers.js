@@ -6,8 +6,7 @@
  *
  * @module rodosha/servers
  */
-Esquire.define('rodosha/servers', ['$promise', '$deferred' ,'rodosha/messages' ,'rodosha/proxy'],
-function(Promise, Deferred, messages, proxy) {
+Esquire.define('rodosha/servers', ['$promise', '$deferred' ,'rodosha/messages' ,'rodosha/proxy', 'rodosha/utils'], function(Promise, Deferred, messages, proxy, utils) {
 
   /**
    * Create a new {@link module:rodosha/servers.Server Server} instance wrapping
@@ -172,50 +171,37 @@ function(Promise, Deferred, messages, proxy) {
         }
       },
 
-      /* ---------------------------------------------------------------------- */
+      /* -------------------------------------------------------------------- */
 
       import: function() {
 
         /* Find all modules to import */
-        var modules = {};
-        var args = Esquire.$$normalize(arguments).arguments;
-        for (var i = 0; i < args.length; i++) {
-          var moduleName = args[i];
-          var module = Esquire.module(moduleName);
-          if (! module) {
-            throw new Error("Module '" + moduleName + "' not defined");
-          } else {
-            modules[moduleName] = module;
-            var dependencies = Esquire.resolve(module, true);
-            for (var j in dependencies) {
-              var dependency = dependencies[j];
-              modules[dependency.name] = dependency;
-            }
+        var server = this;
+        return utils.resolve(arguments).then(function(modules) {
+
+          /* Prune modules already injected in the worker */
+          var injectables = [];
+          for (var moduleName in modules) {
+            if (injectedModules[moduleName]) continue;
+            injectables.push(modules[moduleName]);
           }
-        }
 
-        /* Prune modules already injected in the worker */
-        var injectables = [];
-        for (var moduleName in modules) {
-          if (injectedModules[moduleName]) continue;
-          if (modules[moduleName].$$dynamic) continue;
-          injectables.push(modules[moduleName]);
-        }
+          /* Inject each module in the worker */
+          var promises = [];
+          for (var i in injectables) {
 
-        /* Inject each module in the worker */
-        var promises = [];
-        for (var i in injectables) {
+            /* Message id, deferred, and (derived) promise */
+            promises.push(server.send({module: injectables[i]})
+              .then(function(moduleName) {
+                injectedModules[moduleName] = true;
+                return moduleName;
+              })
+            );
+          }
 
-          /* Message id, deferred, and (derived) promise */
-          promises.push(this.send({module: injectables[i]})
-            .then(function(moduleName) {
-              injectedModules[moduleName] = true;
-              return moduleName;
-            })
-          );
-        }
-
-        return Promise.all(promises);
+          /* Return a promise combining all imports */
+          return Promise.all(promises);
+        });
       },
 
       proxy: function(module) {

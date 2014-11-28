@@ -25,7 +25,7 @@
     "karma-verbose-reporter": "^0.0.1"
   },
   "dependencies": {
-    "esquire": "^1.0.2",
+    "esquire": "^1.1.1",
     "temporary": "^0.0.8"
   }
 }
