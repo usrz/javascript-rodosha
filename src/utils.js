@@ -1,3 +1,5 @@
+'use strict';
+
 Esquire.define('rodosha/utils', ['$promise'], function(Promise) {
 
   /* Flatten an array, or array of array, for aguments */

@@ -1,3 +1,5 @@
+'use strict';
+
 describe("Rodosha in Node.JS", function() {
 
   var rodosha = require("../index.js");

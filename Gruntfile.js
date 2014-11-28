@@ -41,7 +41,7 @@ module.exports = function(grunt) {
     /* Documentation task */
     'jsdoc-ng' : {
       'dist' : {
-        src: ['src/*.js', 'README.md' ],
+        src: ['src/*.js', 'src/*.jsdoc', 'README.md' ],
         dest: 'docs',
         template : 'jsdoc-ng',
         options: {

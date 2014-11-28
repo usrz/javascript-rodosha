@@ -1,6 +1,6 @@
 {
   "name": "rodosha",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Rodosha: multi-threading using workers and proxy objects",
   "main": "index.js",
   "repository": {
@@ -25,7 +25,7 @@
     "karma-verbose-reporter": "^0.0.1"
   },
   "dependencies": {
-    "esquire": "^1.1.1",
+    "esquire": "^1.1.2",
     "temporary": "^0.0.8"
   }
 }
