@@ -1,6 +1,6 @@
 {
   "name": "rodosha",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Rodosha: multi-threading using workers and proxy objects",
   "main": "index.js",
   "repository": {
