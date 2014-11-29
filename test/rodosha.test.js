@@ -28,7 +28,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
         expect(c.arr_e).to.be.deep.equal([]);
         expect(function() { c.fnc_f("hello") }).to.throw('test/module_c[fnc_f] not running in worker');
-      })
+      }).done();
+
     });
 
     /* ---------------------------------------------------------------------- */
@@ -49,6 +50,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         expect(proxy).to.be.equal("a-value");
         return openRodosha.close();
       })
+
+      .done();
 
     });
 
@@ -74,6 +77,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         expect(result).to.be.equal("b-value");
         return openRodosha.close();
       })
+
+      .done();
 
     });
 
@@ -123,6 +128,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         return openRodosha.close();
       })
 
+      .done();
+
     });
 
     /* ---------------------------------------------------------------------- */
@@ -149,7 +156,7 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
           expect(r.modules).to.include('test/module_c');
           return r.close();
         }),
-      ])
+      ]).done();
 
     });
 
@@ -187,6 +194,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         expect(success[1]).to.be.equal('b-value a-value bar');
         return openRodosha.close();
       })
+
+      .done();
 
     });
 
@@ -237,6 +246,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         expect(success).to.not.be.deep.equal(rarray);
         return openRodosha.close();
       })
+
+      .done();
 
     });
 
@@ -292,6 +303,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         return openRodosha.close();
       })
 
+      .done();
+
     });
 
     /* ---------------------------------------------------------------------- */
@@ -320,6 +333,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         return openRodosha.close();
       })
 
+      .done();
+
     });
 
     /* ---------------------------------------------------------------------- */
@@ -341,6 +356,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
       .then(function(success) {
         expect(success).to.be.equal(result);
       })
+
+      .done();
 
     });
 
@@ -369,6 +386,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         expect(failure.message).to.be.equal(result);
         return openRodosha.close();
       })
+
+      .done();
 
     });
 
@@ -402,6 +421,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         expect(failure.message).to.be.equal("Proxy 'proxy_1.obj_d.fnc' not found");
         return openRodosha.close();
       })
+
+      .done();
 
     });
 
@@ -461,7 +482,9 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
       .then(function(results) {
         var now = new Date().getTime();
         console.log("Closed in " + (now - start) + " ms");
-      });
+      })
+
+      .done();
 
     });
 
@@ -502,6 +525,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
         expect(failure.message).to.match(/Worker \w+ unavailable/);
       })
 
+      .done();
+
     });
 
     /* ---------------------------------------------------------------------- */
@@ -530,6 +555,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
       }, function(failure) {
         expect(failure).to.be.equal(termination);
       })
+
+      .done();
 
     });
 

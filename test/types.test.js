@@ -98,7 +98,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         return types.test_undefined(undefined);
       }).then(function(result) {
         expect(result).to.be.a('undefined');
-      })
+      }).done();
     })
 
     promises("should validate null", function() {
@@ -106,7 +106,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         return types.test_null(null);
       }).then(function(result) {
         expect(result).to.be.null;
-      })
+      }).done();
     })
 
     promises("should validate numbers", function() {
@@ -115,7 +115,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.a('number');
         expect(result).to.be.equal(123.456);
-      })
+      }).done();
     })
 
     promises("should validate NaN", function() {
@@ -124,7 +124,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.a('number');
         expect(isNaN(result)).to.be.true;
-      })
+      }).done();
     })
 
     promises("should validate strings", function() {
@@ -133,7 +133,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.a('string');
         expect(result).to.be.equal("Hello, world!");
-      })
+      }).done();
     })
 
     promises("should validate objects", function() {
@@ -143,7 +143,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.a('object');
         expect(result).to.be.deep.equal(object);
-      })
+      }).done();
     })
 
     promises("should validate arrays", function() {
@@ -153,7 +153,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.a('array');
         expect(result).to.be.deep.equal(array);
-      })
+      }).done();
     })
 
     promises("should validate dates", function() {
@@ -163,7 +163,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Date);
         expect(result).to.be.deep.equal(date);
-      })
+      }).done();
     })
 
     promises("should validate regular expressions", function() {
@@ -172,7 +172,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(RegExp);
         expect(result).to.be.deep.equal(/^hello, world$/gi);
-      })
+      }).done();
     })
 
     /* ====================================================================== */
@@ -184,7 +184,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         expect(result).to.be.instanceof(ArrayBuffer);
         expect(result).to.be.deep.equal(new ArrayBuffer());
         expect(new Uint8Array(result)).to.be.deep.equal(new Uint8Array());
-      })
+      }).done();
     })
 
     promises("should validate a normal ArrayBuffer", function() {
@@ -194,7 +194,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         expect(result).to.be.instanceof(ArrayBuffer);
         expect(result).to.be.deep.equal(myArrayBuffer);
         expect(new Uint8Array(result)).to.be.deep.equal(new Uint8Array(myArrayBuffer));
-      })
+      }).done();
     })
 
     /* ====================================================================== */
@@ -205,7 +205,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Uint8Array);
         expect(result).to.be.deep.equal(new Uint8Array());
-      })
+      }).done();
     })
 
     promises("should validate a normal Uint8Array", function() {
@@ -214,7 +214,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Uint8Array);
         expect(result).to.be.deep.equal(normalUint8Array);
-      })
+      }).done();
     })
 
     promises("should validate a partial Uint8Array", function() {
@@ -223,7 +223,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Uint8Array);
         checkTypedArrays(result, partialUint8Array);
-      })
+      }).done();
     })
 
     /* ====================================================================== */
@@ -234,7 +234,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Int8Array);
         expect(result).to.be.deep.equal(new Int8Array());
-      })
+      }).done();
     })
 
     promises("should validate a normal Int8Array", function() {
@@ -243,7 +243,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Int8Array);
         expect(result).to.be.deep.equal(normalInt8Array);
-      })
+      }).done();
     })
 
     promises("should validate a partial Int8Array", function() {
@@ -252,7 +252,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Int8Array);
         checkTypedArrays(result, partialInt8Array);
-      })
+      }).done();
     })
 
 
@@ -263,7 +263,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Int16Array);
         expect(result).to.be.deep.equal(new Int16Array());
-      })
+      }).done();
     })
 
     promises("should validate a normal Int16Array", function() {
@@ -272,7 +272,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Int16Array);
         expect(result).to.be.deep.equal(normalInt16Array);
-      })
+      }).done();
     })
 
     promises("should validate a partial Int16Array", function() {
@@ -281,7 +281,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Int16Array);
         checkTypedArrays(result, partialInt16Array);
-      })
+      }).done();
     })
 
 
@@ -292,7 +292,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Uint16Array);
         expect(result).to.be.deep.equal(new Uint16Array());
-      })
+      }).done();
     })
 
     promises("should validate a normal Uint16Array", function() {
@@ -301,7 +301,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Uint16Array);
         expect(result).to.be.deep.equal(normalUint16Array);
-      })
+      }).done();
     })
 
     promises("should validate a partial Uint16Array", function() {
@@ -310,7 +310,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Uint16Array);
         checkTypedArrays(result, partialUint16Array);
-      })
+      }).done();
     })
 
 
@@ -321,7 +321,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Int32Array);
         expect(result).to.be.deep.equal(new Int32Array());
-      })
+      }).done();
     })
 
     promises("should validate a normal Int32Array", function() {
@@ -330,7 +330,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Int32Array);
         expect(result).to.be.deep.equal(normalInt32Array);
-      })
+      }).done();
     })
 
     promises("should validate a partial Int32Array", function() {
@@ -339,7 +339,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Int32Array);
         checkTypedArrays(result, partialInt32Array);
-      })
+      }).done();
     })
 
 
@@ -350,7 +350,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Uint32Array);
         expect(result).to.be.deep.equal(new Uint32Array());
-      })
+      }).done();
     })
 
     promises("should validate a normal Uint32Array", function() {
@@ -359,7 +359,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Uint32Array);
         expect(result).to.be.deep.equal(normalUint32Array);
-      })
+      }).done();
     })
 
     promises("should validate a partial Uint32Array", function() {
@@ -368,7 +368,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Uint32Array);
         checkTypedArrays(result, partialUint32Array);
-      })
+      }).done();
     })
 
 
@@ -379,7 +379,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Float32Array);
         expect(result).to.be.deep.equal(new Float32Array());
-      })
+      }).done();
     })
 
     promises("should validate a normal Float32Array", function() {
@@ -388,7 +388,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Float32Array);
         expect(result).to.be.deep.equal(normalFloat32Array);
-      })
+      }).done();
     })
 
     promises("should validate a partial Float32Array", function() {
@@ -397,7 +397,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
       }).then(function(result) {
         expect(result).to.be.instanceof(Float32Array);
         checkTypedArrays(result, partialFloat32Array);
-      })
+      }).done();
     })
 
 
@@ -411,7 +411,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         }).then(function(result) {
           expect(result).to.be.instanceof(Uint8ClampedArray);
           expect(result).to.be.deep.equal(new Uint8ClampedArray());
-        })
+        }).done();
       })
 
       promises("should validate a normal Uint8ClampedArray", function() {
@@ -420,7 +420,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         }).then(function(result) {
           expect(result).to.be.instanceof(Uint8ClampedArray);
           expect(result).to.be.deep.equal(normalUint8ClampedArray);
-        })
+        }).done();
       })
 
       promises("should validate a partial Uint8ClampedArray", function() {
@@ -429,7 +429,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         }).then(function(result) {
           expect(result).to.be.instanceof(Uint8ClampedArray);
           checkTypedArrays(result, partialUint8ClampedArray);
-        })
+        }).done();
       })
 
     }
@@ -442,7 +442,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         }).then(function(result) {
           expect(result).to.be.instanceof(Float64Array);
           expect(result).to.be.deep.equal(new Float64Array());
-        })
+        }).done();
       })
 
       if ($global.Float64Array)
@@ -452,7 +452,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         }).then(function(result) {
           expect(result).to.be.instanceof(Float64Array);
           expect(result).to.be.deep.equal(normalFloat64Array);
-        })
+        }).done();
       })
 
       if ($global.Float64Array)
@@ -462,7 +462,7 @@ esquire(['$global', 'rodosha', 'test/types'], function($global, rodosha, types) 
         }).then(function(result) {
           expect(result).to.be.instanceof(Float64Array);
           checkTypedArrays(result, partialFloat64Array);
-        })
+        }).done();
       })
     }
   });

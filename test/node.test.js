@@ -16,7 +16,8 @@ describe("Rodosha in Node.JS", function() {
     })
     .then(function(result) {
       expect(result).to.be.equal(undefined);
-    });
+    })
+    .done();
   });
 
 });
