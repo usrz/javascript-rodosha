@@ -14,8 +14,11 @@ Esquire.define('rodosha', ['$deferred', 'rodosha/servers', 'rodosha/workers', 'r
    * @param {string} [module] - Any module to import in the {@link Worker} at
    *                            construction time.
    * @param {string} [...] - Any other module name (allows multiple arguments)
-   * @param {boolean} [debug] - If `true` (lots of) debugging information will
-   *                            be dumped to the console.
+   * @param {boolean} [debug] - If `true` messages between client and worker
+   *                            will be dumped to the console.
+   * @param {boolean} [debugScript] - If `debug` and `debugScript` are both
+   *                                  `true` also the initial script used to
+   *                                  construct the worker will be dumped.
    * @return {Promise} A {@link Promise} for a {@link Rodosha} instance.
    */
   return Object.freeze({ create: function() {
@@ -28,11 +31,18 @@ Esquire.define('rodosha', ['$deferred', 'rodosha/servers', 'rodosha/workers', 'r
 
     /* Debug? */
     var debug = false;
+    var debugMore = false;
     var lastArgument = arguments.length;
     if (arguments.length > 0) {
       if (typeof(arguments[arguments.length - 1]) === 'boolean') {
-        debug = arguments[arguments.length - 1];
-        lastArgument -= 1;
+        if (typeof(arguments[arguments.length - 2]) === 'boolean') {
+          debugMore = arguments[arguments.length - 1];
+          debug = arguments[arguments.length - 2];
+          lastArgument -= 2;
+        } else {
+          debug = arguments[arguments.length - 1];
+          lastArgument -= 1;
+        }
       }
     }
 
@@ -58,7 +68,7 @@ Esquire.define('rodosha', ['$deferred', 'rodosha/servers', 'rodosha/workers', 'r
       script.push("new Esquire().require('rodosha/client').then(function(client) { client.init(" + debug + ") });\n");
 
       /* Dump our code for debugging */
-      if (debug) {
+      if (debugMore) {
         var debugScript = script.join('').split('\n');
         for (var i in debugScript) {
           var line = new Number(i) + 1;
