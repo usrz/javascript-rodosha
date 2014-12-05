@@ -91,7 +91,7 @@ Esquire.define('rodosha/proxy', ['$promise'], function(Promise) {
     var object = {};
 
     /* Function definitions, can be also at top level */
-    if (definition['__$$invocable$$__'] === true) {
+    if (definition['!$invocable$!'] === true) {
       var clone = names.slice(0);
 
       /* Can be called as "new F()" or "f()" */
@@ -126,13 +126,13 @@ Esquire.define('rodosha/proxy', ['$promise'], function(Promise) {
         var props = { enumerable: true, configurable: false };
 
         /* Function definitions */
-        if (child['__$$invocable$$__'] === true) {
+        if (child['!$invocable$!'] === true) {
           props.value = makeProxy(child, clone, send, rootDefinition);
         }
 
         /* Setters/getters definitions */
-        else if (child.hasOwnProperty('__$$value$$__')) {
-          var initialValue = child['__$$value$$__'];
+        else if (child.hasOwnProperty('!$value$!')) {
+          var initialValue = child['!$value$!'];
           props['get'] = function() {
             var message = { proxy: { proxy: clone } };
             var promise = new ProxyPromise(message, send, initialValue);
@@ -152,7 +152,7 @@ Esquire.define('rodosha/proxy', ['$promise'], function(Promise) {
           props.value = makeProxy(child, clone, send, rootDefinition);
         }
 
-        else if (i !== '__$$invocable$$__') {
+        else if (i !== '!$invocable$!') {
           throw new Error("Wrong proxy definition at " + names.join('.') + "." + i + " for \n"
                         + JSON.stringify(rootDefinition, null, 1));
         }

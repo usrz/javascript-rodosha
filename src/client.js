@@ -29,7 +29,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
 
       /* Definition, and functions are invokable */
       var definition = {};
-      if (typeof(object) === 'function') definition["__$$invocable$$__"] = true;
+      if (typeof(object) === 'function') definition["!$invocable$!"] = true;
 
       /* Recursively define this object */
       stack.push(object);
@@ -42,7 +42,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
     }
 
     /* Everything else is just a getter */
-    return { "__$$value$$__": object };
+    return { "!$value$!": object };
   }
 
   /* Make a proxy and return a valid response */

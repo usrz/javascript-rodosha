@@ -36,17 +36,17 @@ function messages(process,
   /* Node.JS has "process", PhantomJS does not have ArrayBuffer.isView */
   var nativeTransfers = ((process == null) && (ArrayBuffer.isView != null));
 
-  var transferableUndefined  = nativeTransfers ? undefined : { "__$$native$$__" : "undefined" };
-  var transferableNotANumber = nativeTransfers ? NaN       : { "__$$native$$__" : "NaN"       };
+  var transferableUndefined  = nativeTransfers ? undefined : { "!$native$!" : "undefined" };
+  var transferableNotANumber = nativeTransfers ? NaN       : { "!$native$!" : "NaN"       };
 
   function transferDate(date) {
     if (nativeTransfers) return date;
-    return { "__$$native$$__" : { "Date" : date.getTime() }};
+    return { "!$native$!" : { "Date" : date.getTime() }};
   }
 
   function transferRegExp(expr) {
     if (nativeTransfers) return expr;
-    return { "__$$native$$__" : { "RegExp" : expr.toString() }};
+    return { "!$native$!" : { "RegExp" : expr.toString() }};
   }
 
   /* ======================================================================== */
@@ -56,8 +56,8 @@ function messages(process,
   function decodeArrayBuffer(array) {
 
     /* Speedup on Node.JS using native BASE64 */
-    if (process && Buffer && (array['__$$base64$$__'] != null)) {
-      return new Uint8Array(new Buffer(array['__$$base64$$__'], 'base64')).buffer
+    if (process && Buffer && (array['!$base64$!'] != null)) {
+      return new Uint8Array(new Buffer(array['!$base64$!'], 'base64')).buffer
     }
 
     /* Normal array processing */
@@ -72,7 +72,7 @@ function messages(process,
 
     /* Speedup on Node.JS using native BASE64 */
     if (process && Buffer) {
-      return { "__$$base64$$__": new Buffer(view).toString('base64') };
+      return { "!$base64$!": new Buffer(view).toString('base64') };
     }
 
     /* Convert the bytes into an array */
@@ -108,16 +108,16 @@ function messages(process,
   function encodeBufferOrView(decoded) {
     if (nativeTransfers) return decoded;
 
-    if (decoded instanceof ArrayBuffer)       return { "__$$native$$__": { "ArrayBuffer"       : encodeArrayBuffer(new Uint8Array(decoded)) }};
-    if (decoded instanceof Int8Array)         return { "__$$native$$__": { "Int8Array"         : encodeArrayBuffer(decoded) }};
-    if (decoded instanceof Uint8Array)        return { "__$$native$$__": { "Uint8Array"        : encodeArrayBuffer(decoded) }};
-    if (decoded instanceof Int16Array)        return { "__$$native$$__": { "Int16Array"        : encodeArrayBuffer(decoded) }};
-    if (decoded instanceof Uint16Array)       return { "__$$native$$__": { "Uint16Array"       : encodeArrayBuffer(decoded) }};
-    if (decoded instanceof Int32Array)        return { "__$$native$$__": { "Int32Array"        : encodeArrayBuffer(decoded) }};
-    if (decoded instanceof Uint32Array)       return { "__$$native$$__": { "Uint32Array"       : encodeArrayBuffer(decoded) }};
-    if (decoded instanceof Float32Array)      return { "__$$native$$__": { "Float32Array"      : encodeArrayBuffer(decoded) }};
-    if (decoded instanceof Uint8ClampedArray) return { "__$$native$$__": { "Uint8ClampedArray" : encodeArrayBuffer(decoded) }};
-    if (decoded instanceof Float64Array)      return { "__$$native$$__": { "Float64Array"      : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof ArrayBuffer)       return { "!$native$!": { "ArrayBuffer"       : encodeArrayBuffer(new Uint8Array(decoded)) }};
+    if (decoded instanceof Int8Array)         return { "!$native$!": { "Int8Array"         : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Uint8Array)        return { "!$native$!": { "Uint8Array"        : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Int16Array)        return { "!$native$!": { "Int16Array"        : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Uint16Array)       return { "!$native$!": { "Uint16Array"       : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Int32Array)        return { "!$native$!": { "Int32Array"        : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Uint32Array)       return { "!$native$!": { "Uint32Array"       : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Float32Array)      return { "!$native$!": { "Float32Array"      : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Uint8ClampedArray) return { "!$native$!": { "Uint8ClampedArray" : encodeArrayBuffer(decoded) }};
+    if (decoded instanceof Float64Array)      return { "!$native$!": { "Float64Array"      : encodeArrayBuffer(decoded) }};
 
     throw new Error("Unable to encode ArrayBuffer or TypedArray (wrong type)");
 
@@ -210,12 +210,12 @@ function messages(process,
 
   function addProxy(object, id) {
     if (object == null) throw new Error("Unable to proxy null object");
-    if (object.hasOwnProperty("__$$proxyId$$__")) return object["__$$proxyId$$__"];
+    if (object.hasOwnProperty("!$proxyId$!")) return object["!$proxyId$!"];
 
     if (! id) id = "proxy_" + (++ lastProxyId);
 
-    Object.defineProperty(object, "__$$proxyId$$__", { enumerable: false, configurable: false, value: id });
-    if (object["__$$proxyId$$__"] != id) {
+    Object.defineProperty(object, "!$proxyId$!", { enumerable: false, configurable: false, value: id });
+    if (object["!$proxyId$!"] != id) {
       throw new Error("Unable to set proxy ID " + id + " on object instance (frozen?)");
     }
 
@@ -232,8 +232,8 @@ function messages(process,
     if (proxies.hasOwnProperty(idOrObject)) {
       delete proxies[idOrObject];
       return idOrObject;
-    } else if (idOrObject.hasOwnProperty('__$$proxyId$$__')) {
-      var id = idOrObject['__$$proxyId$$__'];
+    } else if (idOrObject.hasOwnProperty('!$proxyId$!')) {
+      var id = idOrObject['!$proxyId$!'];
       delete proxies[id];
       return id;
     } else {
@@ -288,7 +288,7 @@ function messages(process,
 
     if (type === 'boolean') return decoded;
     if (type === 'string') return decoded;
-    if (type === 'function') return { "__$$function$$__": decoded.toString() };
+    if (type === 'function') return { "!$function$!": decoded.toString() };
 
     if (type === 'number') {
       if (isNaN(decoded)) {
@@ -301,8 +301,8 @@ function messages(process,
     if (type === 'object') {
 
       /* Proxy references */
-      if (decoded.hasOwnProperty('__$$proxyId$$__')) {
-        return { "__$$proxyId$$__": decoded['__$$proxyId$$__'] };
+      if (decoded.hasOwnProperty('!$proxyId$!')) {
+        return { "!$proxyId$!": decoded['!$proxyId$!'] };
       }
 
       /* ArrayBuffers, views, dates, regular expressions, ... */
@@ -319,7 +319,7 @@ function messages(process,
         if (name) error.name = name;
         if (message) error.message = message;
         if (stack) error.stack = stack;
-        return { "__$$error$$__": error };
+        return { "!$error$!": error };
       }
 
       /* Normal arrays and arrays from arguments calls */
@@ -363,23 +363,23 @@ function messages(process,
       if (encoded instanceof RegExp) return encoded;
 
       /* Errors */
-      if (encoded["__$$error$$__"] != null) {
-        return new RemoteError(encoded["__$$error$$__"]);
+      if (encoded["!$error$!"] != null) {
+        return new RemoteError(encoded["!$error$!"]);
       }
 
       /* Functions */
-      if (encoded["__$$function$$__"] != null) {
-        return eval('(' + encoded["__$$function$$__"] + ')');
+      if (encoded["!$function$!"] != null) {
+        return eval('(' + encoded["!$function$!"] + ')');
       }
 
       /* Native transfers */
-      if (encoded["__$$native$$__"] != null) {
-        return receiveNative(encoded["__$$native$$__"]);
+      if (encoded["!$native$!"] != null) {
+        return receiveNative(encoded["!$native$!"]);
       }
 
       /* Proxy references */
-      if (encoded["__$$proxyId$$__"] != null) {
-        return getProxy(encoded["__$$proxyId$$__"]);
+      if (encoded["!$proxyId$!"] != null) {
+        return getProxy(encoded["!$proxyId$!"]);
       }
 
       /* Other (normal) object and arrays */

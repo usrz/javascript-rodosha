@@ -9,8 +9,8 @@ esquire(['rodosha/messages'], function(messages) {
   var hasStack = new Error().stack && true || false;
 
   var nativeTransfers = messages.nativeTransfers;
-  var transferableUndefined  = nativeTransfers ? undefined : { "__$$native$$__" : "undefined" };
-  var transferableNotANumber = nativeTransfers ? NaN       : { "__$$native$$__" : "NaN"       };
+  var transferableUndefined  = nativeTransfers ? undefined : { "!$native$!" : "undefined" };
+  var transferableNotANumber = nativeTransfers ? NaN       : { "!$native$!" : "NaN"       };
 
   describe("Messages", function() {
     it("should encode a basic object", function() {
@@ -59,20 +59,20 @@ esquire(['rodosha/messages'], function(messages) {
 
       // Error...
       expect(encoded["_error"]).to.exist;
-      expect(encoded["_error"]["__$$error$$__"]).to.exist;
-      expect(encoded["_error"]["__$$error$$__"].name).to.equal("ReferenceError");
-      expect(encoded["_error"]["__$$error$$__"].message).to.equal("This is an error");
+      expect(encoded["_error"]["!$error$!"]).to.exist;
+      expect(encoded["_error"]["!$error$!"].name).to.equal("ReferenceError");
+      expect(encoded["_error"]["!$error$!"].message).to.equal("This is an error");
       if (hasStack) {
-        expect(encoded["_error"]["__$$error$$__"].stack).to.equal(object._error.stack);
+        expect(encoded["_error"]["!$error$!"].stack).to.equal(object._error.stack);
       } else {
         console.debug("No stack traces for errros");
       }
 
       // Function...
       expect(encoded["_function"]).to.exist;
-      expect(encoded["_function"]["__$$function$$__"]).to.exist;
-      expect(encoded["_function"]["__$$function$$__"].replace(/\n/mg,' ')).to.match(/^function *\(a\) *{(.*)return a \+ 1 *;? *}$/m);
-      expect(encoded["_function"]["__$$function$$__"]).to.equal(object._function.toString());
+      expect(encoded["_function"]["!$function$!"]).to.exist;
+      expect(encoded["_function"]["!$function$!"].replace(/\n/mg,' ')).to.match(/^function *\(a\) *{(.*)return a \+ 1 *;? *}$/m);
+      expect(encoded["_function"]["!$function$!"]).to.equal(object._function.toString());
 
       // Arguments...
       expect(encoded["_arguments"]).to.deep.equal(['argument0', 1]);
@@ -95,8 +95,8 @@ esquire(['rodosha/messages'], function(messages) {
         "_string":    "Hello, world",
         "_array":     ["zero", 1],
         "_object":    { a: 1, b: "two"},
-        "_error":     { "__$$error$$__": { name: "FooError", message: "BarMessage", stack: "BazStack" } },
-        "_function":  { "__$$function$$__": "function(a) { return a + 1 }" },
+        "_error":     { "!$error$!": { name: "FooError", message: "BarMessage", stack: "BazStack" } },
+        "_function":  { "!$function$!": "function(a) { return a + 1 }" },
       }
 
       var decoded = decode(object);

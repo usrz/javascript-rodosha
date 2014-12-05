@@ -182,8 +182,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(result) {
         expect(result).to.be.a('object');
-        expect(result["__$$proxyId$$__"], "result.$$proxyId$$").exist;
-        expect(result["__$$proxyId$$__"]).to.not.equal(openProxy["__$$proxyId$$__"]);
+        expect(result["!$proxyId$!"]).to.exist;
+        expect(result["!$proxyId$!"]).to.not.equal(openProxy["!$proxyId$!"]);
         return Promise.all([openProxy.obj_d.fnc('foo'), result.fnc('bar')]);
       })
 
