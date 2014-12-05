@@ -182,8 +182,8 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
 
       .then(function(result) {
         expect(result).to.be.a('object');
-        expect(result.$$proxyId$$, "result.$$proxyId$$").exist;
-        expect(result.$$proxyId$$).to.not.equal(openProxy.$$proxyId$$);
+        expect(result["__$$proxyId$$__"], "result.$$proxyId$$").exist;
+        expect(result["__$$proxyId$$__"]).to.not.equal(openProxy["__$$proxyId$$__"]);
         return Promise.all([openProxy.obj_d.fnc('foo'), result.fnc('bar')]);
       })
 
@@ -561,6 +561,133 @@ esquire(['$esquire', '$global', '$promise', 'rodosha', 'rodosha/messages'], func
     });
 
   });
+
+  /* ========================================================================== */
+
+  describe("Rodosha Classes", function() {
+
+
+    promises("should construct a class", function() {
+
+      var openRodosha;
+
+      return rodosha.create(debug)
+
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("test/class_module");
+      })
+
+      .then(function(MyClass) {
+        return Promise.all([
+          MyClass.staticMember,
+          MyClass.staticFunction("staticFunctionArgument"),
+          MyClass("invokeConstructorArgument"),
+          new MyClass("constructWithThis"),
+        ]);
+      })
+
+      .then(function(success) {
+        expect(success[0]).to.be.equal('static_member');
+        expect(success[1]).to.be.equal('static_function:staticFunctionArgument');
+        expect(success[2]).to.be.equal('invoked:invokeConstructorArgument');
+
+        var myClassInstance = success[3];
+        expect(myClassInstance).to.be.an('object');
+
+        return Promise.all([
+          myClassInstance.constructorArgument,
+          myClassInstance.instanceMember,
+          myClassInstance.instanceFunction('instanceFunctionArgument'),
+          myClassInstance.prototypeMember,
+          myClassInstance.prototypeFunction('prototypeFunctionArgument'),
+        ]);
+      })
+
+      .then(function(success) {
+        expect(success[0]).to.be.equal('constructWithThis');
+        expect(success[1]).to.be.equal('instance_member');
+        expect(success[2]).to.be.equal('instance_function:instanceFunctionArgument');
+        expect(success[3]).to.be.equal('prototype_member');
+        expect(success[4]).to.be.equal('prototype_function:prototypeFunctionArgument');
+
+        return openRodosha.close();
+      })
+
+      .done();
+
+
+    });
+
+    promises("should keep instances separate", function() {
+
+      var openRodosha;
+
+      return rodosha.create(debug)
+
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("test/sum_module");
+      })
+
+      .then(function(Sum) {
+        return Promise.all([ new Sum(100), new Sum(200) ]);
+      })
+
+      .then(function(success) {
+        return Promise.all([ success[0].add(123), success[1].add(123) ]);
+      })
+
+      .then(function(success) {
+        expect(success[0]).to.be.equal(223);
+        expect(success[1]).to.be.equal(323);
+
+        return openRodosha.close();
+      })
+
+      .done();
+
+    });
+
+    promises("should pass object references", function() {
+
+      var openRodosha;
+      var mySum;
+
+      return rodosha.create(debug)
+
+      .then(function(instance) {
+        openRodosha = instance;
+        return instance.proxy("test/sum_module")
+      })
+
+      .then(function(Sum) {
+        return Promise.all([ new Sum(100), openRodosha.proxy("test/ref_module") ]);
+      })
+
+      .then(function(success) {
+        mySum = success[0];
+        var Ref = success[1];
+
+        return new Ref(mySum);
+      })
+
+      .then(function(success) {
+        return success.add(mySum, 123);
+      })
+
+      .then(function(success) {
+        expect(success).to.be.equal(223);
+
+        return openRodosha.close();
+      })
+
+      .done();
+
+    });
+
+  });
+
 });
 
 /* ========================================================================== */
@@ -638,3 +765,49 @@ Esquire.define("test/module_c", ["test/module_a", "test/module_b", "$deferred", 
   };
 });
 
+Esquire.define("test/class_module", [], function() {
+
+  function MyClass(argument) {
+    if (!(this instanceof MyClass)) return "invoked:" + argument;
+
+    this.constructorArgument = argument;
+
+    this.instanceMember = "instance_member";
+    this.instanceFunction = function(foo) {
+      return "instance_function:" + foo;
+    }
+  };
+
+  MyClass.prototype.prototypeMember = "prototype_member";
+  MyClass.prototype.prototypeFunction = function(foo) {
+    return "prototype_function:" + foo;
+  }
+
+  MyClass.staticMember = "static_member";
+  MyClass.staticFunction = function(foo) {
+    return "static_function:" + foo;
+  }
+
+  return MyClass;
+
+});
+
+Esquire.define("test/sum_module", [], function() {
+
+  return function Sum(initialValue) {
+    this.add = function(value) { return initialValue + value }
+  }
+
+});
+
+Esquire.define("test/ref_module", [ "test/sum_module" ], function(Sum) {
+
+  return function Ref(sum) {
+    if (!(sum instanceof Sum)) throw new Error("Not constructed with Sum: " + JSON.stringify(sum));
+    this.add = function(otherSum, value) {
+      if (otherSum === sum) return sum.add(value);
+      throw new Error("Wrong object reference");
+    }
+  }
+
+});

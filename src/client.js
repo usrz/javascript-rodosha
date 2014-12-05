@@ -13,29 +13,26 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
   /* OBJECT PROXIES                                                           */
   /* ======================================================================== */
 
-  var proxies = {};
-  var lastProxyId = 0;
-
   /* Create a proxy definition */
   function defineProxy(object, stack) {
     if (! stack) stack = [];
 
-    /* Functions always get invoked */
-    if (typeof(object) === 'function') {
-      return { "__$$invocable$$__": true }; // invoke
-    }
-
     /* Non-null, non-array objects will be defined recursively */
-    if (object && (typeof(object) === 'object') && (!Array.isArray(object))) {
+    if (object &&
+        ((typeof(object) === 'object') || (typeof(object) === 'function')) &&
+        (!Array.isArray(object))) {
 
       /* Just triple check */
       if (stack.indexOf(object) >= 0) {
         throw new TypeError("Unable to proxy object: circular reference detected");
       }
 
+      /* Definition, and functions are invokable */
+      var definition = {};
+      if (typeof(object) === 'function') definition["__$$invocable$$__"] = true;
+
       /* Recursively define this object */
       stack.push(object);
-      var definition = {};
       for (var i in object) {
         definition[i] = defineProxy(object[i], stack);
       }
@@ -54,8 +51,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
         (typeof(object) === 'function')) {
 
       /* Only non-array objects and functions get proxied */
-      var proxyId = "proxy_" + (++ lastProxyId);
-      proxies[proxyId] = object;
+      var proxyId = messages.addProxy(object);
       var definition = defineProxy(object);
       return { proxy: { id: proxyId, definition: definition }};
 
@@ -79,20 +75,24 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
   }
 
   Request.prototype.accept = function(data) {
-    if (data && typeof(data.then) === 'function') {
-      var message = this;
-      data.then(
-        function(success) { message.accept(success) },
-        function(failure) { message.reject(failure) }
-      );
-    } else if (data === undefined) {
-      $global.postMessage({ id: this.id, resolve: true, undefined: true });
-    } else if (data === null) {
-      $global.postMessage({ id: this.id, resolve: true, null: true });
-    } else {
-      var response = this.data.makeProxy ? makeProxy(data) : { resolve: messages.encode(data) };
-      response.id = this.id;
-      $global.postMessage(response);
+    try {
+      if (data && typeof(data.then) === 'function') {
+        var message = this;
+        data.then(
+          function(success) { message.accept(success) },
+          function(failure) { message.reject(failure) }
+        );
+      } else if (data === undefined) {
+        $global.postMessage({ id: this.id, resolve: true, undefined: true });
+      } else if (data === null) {
+        $global.postMessage({ id: this.id, resolve: true, null: true });
+      } else {
+        var response = this.data.makeProxy ? makeProxy(data) : { resolve: messages.encode(data) };
+        response.id = this.id;
+        $global.postMessage(response);
+      }
+    } catch (error) {
+      $global.postMessage({ id: this.id, reject: messages.encode(error) });
     }
   }
 
@@ -129,8 +129,6 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
     $global.onmessage = function(event) {
       var message = new Request(event);
 
-      if (message.foo) {console.log("FOO IS", message.foo)};
-
       /* Handler for messages */
       try {
 
@@ -154,7 +152,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
         /* Invoke method on or return value for proxied object */
         else if (message.data.proxy) {
           var proxy = message.data.proxy;
-          var result = proxies;
+          var result = messages.proxies;
           var target = null;
           var targetName = null;
           for (var i in proxy.proxy) {
@@ -169,7 +167,17 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
           }
 
           if (typeof(result) === 'function') {
-            message.accept(result.apply(target, proxy.arguments));
+            if (message.data.newInstance === true) {
+              /* Construct new object instance */
+              message.accept((function(result, args) {
+                function Constructor() { result.apply(this, args) };
+                Constructor.prototype = result.prototype;
+                return new Constructor();
+              })(result, proxy.arguments));
+            } else {
+              /* Simply invoke the function */
+              message.accept(result.apply(target, proxy.arguments));
+            }
           } else if (proxy.value) {
             message.accept(target[targetName] = proxy.value);
           } else {
@@ -179,12 +187,7 @@ Esquire.define('rodosha/client', ['$global', '$esquire', 'rodosha/messages'], fu
 
         /* Gracefully close this */
         else if (message.data.destroy) {
-          if (message.data.destroy in proxies) {
-            delete proxies[message.data.destroy];
-            message.accept();
-          } else {
-            message.reject();
-          }
+          messages.deleteProxy(message.data.destroy);
         }
 
         /* Gracefully close this */

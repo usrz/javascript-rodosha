@@ -75,9 +75,17 @@ Esquire.define('rodosha/servers', ['$promise', '$deferred' ,'rodosha/messages' ,
         var deferred = new Deferred();
 
         /* Encode and remember this message */
-        message.id = lastMessageId ++;
+        var omsg = message;
+        var xid = message.id = lastMessageId ++;
         message = messages.encode(message);
+
+        if (message.id == null) {
+          console.warn("PROXIES", messages.reverseProxies);
+          throw new Error("GONZO: " + xid + " ->\n" + JSON.stringify(omsg, null, 2) + "\n ->\n" + JSON.stringify(message, null , 2));
+        }
+
         pendingMessages[message.id] = deferred;
+
 
         /* If debugging, debug! */
         if (debug) {
@@ -123,7 +131,9 @@ Esquire.define('rodosha/servers', ['$promise', '$deferred' ,'rodosha/messages' ,
             try {
               delete pendingMessages[msgid];
               if (data.hasOwnProperty('proxy')) {
-                deferred.resolve(proxy.buildProxy(data.proxy, this));
+                var instance = proxy.buildProxy(data.proxy, this);
+                messages.addProxy(instance, data.proxy.id);
+                deferred.resolve(Object.freeze(instance));
               } else if (data.hasOwnProperty('resolve')) {
                 if (data.resolve === true) {
                   if (data.undefined === true) deferred.resolve(undefined);
@@ -211,11 +221,8 @@ Esquire.define('rodosha/servers', ['$promise', '$deferred' ,'rodosha/messages' ,
       },
 
       destroy: function(proxy) {
-        if (proxy && proxy['$$proxyId$$']) {
-          return this.send({destroy: proxy['$$proxyId$$']});
-        } else {
-          throw new Error("Invalid proxy object " + proxy);
-        }
+        var proxyId = messages.deleteProxy(proxy);
+        this.send({destroy: proxyId});
       }
 
     });

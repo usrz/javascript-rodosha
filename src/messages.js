@@ -201,6 +201,48 @@ function messages(process,
     throw new Error("Unable to create Uint8Array");
   }
 
+  /* ======================================================================== */
+  /* ENCODING AND DECODING OF MESSAGES                                        */
+  /* ======================================================================== */
+
+  var proxies = {};
+  var lastProxyId = 0;
+
+  function addProxy(object, id) {
+    if (object == null) throw new Error("Unable to proxy null object");
+    if (object.hasOwnProperty("__$$proxyId$$__")) return object["__$$proxyId$$__"];
+
+    if (! id) id = "proxy_" + (++ lastProxyId);
+
+    Object.defineProperty(object, "__$$proxyId$$__", { enumerable: false, configurable: false, value: id });
+    if (object["__$$proxyId$$__"] != id) {
+      throw new Error("Unable to set proxy ID " + id + " on object instance (frozen?)");
+    }
+
+    proxies[id] = object;
+    return id;
+  };
+
+  function getProxy(id) {
+    if (proxies.hasOwnProperty(id)) return proxies[id];
+    throw new Error("Unkwnown proxy: " + proxyId);
+  };
+
+  function deleteProxy(idOrObject) {
+    if (proxies.hasOwnProperty(idOrObject)) {
+      delete proxies[idOrObject];
+      return idOrObject;
+    } else if (idOrObject.hasOwnProperty('__$$proxyId$$__')) {
+      var id = idOrObject['__$$proxyId$$__'];
+      delete proxies[id];
+      return id;
+    } else {
+      throw new Error("Can't delete unkwnown proxy: " + proxyId);
+    }
+  };
+
+  /* ======================================================================== */
+
   /*
    * Copy a source object onto a target, making sure we don't loop, and
    * encoding or decoding all of its members
@@ -257,6 +299,11 @@ function messages(process,
     }
 
     if (type === 'object') {
+
+      /* Proxy references */
+      if (decoded.hasOwnProperty('__$$proxyId$$__')) {
+        return { "__$$proxyId$$__": decoded['__$$proxyId$$__'] };
+      }
 
       /* ArrayBuffers, views, dates, regular expressions, ... */
       if (isBufferOrView(decoded)) return encodeBufferOrView(decoded);
@@ -330,6 +377,11 @@ function messages(process,
         return receiveNative(encoded["__$$native$$__"]);
       }
 
+      /* Proxy references */
+      if (encoded["__$$proxyId$$__"] != null) {
+        return getProxy(encoded["__$$proxyId$$__"]);
+      }
+
       /* Other (normal) object and arrays */
       return copy(encoded, encoded, stack, decode);
     }
@@ -340,6 +392,12 @@ function messages(process,
   return Object.freeze({
     RemoteError: RemoteError,
     nativeTransfers: nativeTransfers,
+
+    proxies: proxies,
+    addProxy: addProxy,
+    getProxy: getProxy,
+    deleteProxy: deleteProxy,
+
     encode: encode,
     decode: decode
   });

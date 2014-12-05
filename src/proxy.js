@@ -6,7 +6,7 @@
  * @module rodosha/proxy
  */
 Esquire.define('rodosha/proxy', ['$promise'], function(Promise) {
-var q = 0;
+
   /**
    * @class module:rodosha/proxy.ProxyPromise
    * @classdesc A specialized {@link Promise} returned by `function`s invoked
@@ -55,6 +55,10 @@ var q = 0;
       return initialValue;
     }
 
+    /*
+     * Define this.then() and this.catch() here, rather than in the prototype,
+     * for when functions are invoked with "new F(..)"... Just easier!
+     */
     this.then = function(onSuccess, onFailure) {
       /* Send the message if we haven't done so already */
       try {
@@ -66,10 +70,9 @@ var q = 0;
       return promise.then(onSuccess, onFailure);
     }
 
-  };
-
-  ProxyPromise.prototype.catch = function(onFailure) {
-    return this.then(null, onFailure);
+    this.catch = function(onFailure) {
+      return this.then(null, onFailure);
+    }
   }
 
   /* ======================================================================== */
@@ -84,18 +87,35 @@ var q = 0;
                     + JSON.stringify(rootDefinition, null, 1));
     }
 
+    /* Initial object */
+    var object = {};
+
     /* Function definitions, can be also at top level */
     if (definition['__$$invocable$$__'] === true) {
       var clone = names.slice(0);
-      return function() {
-        /* Prepare our message and return a promise to send */
+
+      /* Can be called as "new F()" or "f()" */
+      var Invocable = function() {
+
+        /* Prepare our message */
         var message = { proxy: { proxy: clone, arguments: arguments }};
-        return new ProxyPromise(message, send);
+
+        /* Is this "new F()" or a normal call? */
+        if (this instanceof Invocable) {
+          message.newInstance = true;
+          ProxyPromise.call(this, message, send);
+          this.asProxy(true);
+        } else {
+          return new ProxyPromise(message, send);
+        }
       }
+
+      /* Functions can have members, so keep processing */
+      object = Invocable;
+
     }
 
-    /* Not a function definition, therefore clone! */
-    var object = {};
+    /* Clone all the members of the definition */
     for (var i in definition) {
       (function(i) {
         var child = definition[i];
@@ -127,17 +147,13 @@ var q = 0;
           };
         }
 
-        /* */
+        /* Nested definitions get recursively processed */
         else if (typeof(child) === 'object') {
-          /* Create dynamic proxies for nested definitions */
-          //props.get = function() { return makeProxy(child, clone, send, rootDefinition) }
-
           props.value = makeProxy(child, clone, send, rootDefinition);
-
         }
 
-        else {
-          throw new Error("Wrong proxy definition at " + names.join('.') + " for \n"
+        else if (i !== '__$$invocable$$__') {
+          throw new Error("Wrong proxy definition at " + names.join('.') + "." + i + " for \n"
                         + JSON.stringify(rootDefinition, null, 1));
         }
 
@@ -159,11 +175,7 @@ var q = 0;
    * @return {object} A **proxy** object to an instance from the {@link Worker}.
    */
   function buildProxy(proxy, server) {
-    var object = makeProxy(proxy.definition, [ proxy.id ], server.send, proxy.definition);
-    return Object.defineProperty(object, "$$proxyId$$", {
-      enumerable: false, configurable: false, value: proxy.id
-    });
-    return object;
+    return makeProxy(proxy.definition, [ proxy.id ], server.send, proxy.definition);
   }
 
   return Object.freeze({ buildProxy: buildProxy });
